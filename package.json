@@ -75,15 +75,5 @@
     "webpack": "4.19.1"
   },
   "scripts": {
-    "precommit": "cat docs/Introduction.md docs/UserGuide.md docs/Changelog.md > README.md && git add README.md && lint-staged",
-    "prebuild": "rimraf dist && npm run icons",
-    "build": "rollup -c",
-    "icons": "babel src/components/Icons -x \".svg\" --out-dir src/components/Icons --no-babelrc --plugins syntax-jsx,./scripts/babel-plugins/react-svg",
-    "posticons": "prettier-eslint --write src/components/Icons/*.js",
-    "prepare": "npm run build",
-    "prepublish": "test $(npm -v | tr . '\\n' | head -n 1) -ge '4' || exit 1",
-    "postpublish": "git push --follow-tags",
-    "styleguide": "npm run icons && cross-env NODE_ENV=development styleguidist server",
-    "styleguide:build": "npm run icons && cross-env NODE_ENV=production styleguidist build"
   }
 }
