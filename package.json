@@ -8,9 +8,7 @@
     "Philipp Holly <office@pholly.at>"
   ],
   "license": "MIT",
-  "main": "./dist/ui-kit.esm.js",
-  "module": "./dist/ui-kit.esm.js",
-  "unpkg": "./dist/ui-kit.esm.js",
+  "main": "./ui-kit.js",
   "files": [
     "dist"
   ],
