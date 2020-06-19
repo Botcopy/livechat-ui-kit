@@ -76,8 +76,11 @@ var emotion = createEmotion(
   {
     key: 'lc',
     stylisPlugins: [varsPlugin],
-    container: document.getElementById('botcopy-widget-root')
-      && document.getElementById('botcopy-widget-root').shadowRoot
+    container:
+      document.getElementById('botcopy-widget-root') &&
+      document.getElementById('botcopy-widget-root').shadowRoot
+        ? document.getElementById('botcopy-widget-root').shadowRoot
+        : document.getElementById('botcopy-widget-root')
   }
 )
 var css = emotion.css,
