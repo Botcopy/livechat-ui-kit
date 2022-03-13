@@ -463,7 +463,27 @@ var isScrolledToLeft = function isScrolledToLeft(element) {
   return element.scrollLeft <= 0
 }
 var scrollToBottom = function scrollToBottom(element) {
-  element.scrollTop = element.scrollHeight
+  // get message after a user message, and scroll to the top of it
+  const bcUserMessages = element.getElementsByClassName('botcopy--message-group user-message');
+  // console.log('scrollToBottom', element, element.scrollTop, element.scrollHeight, bcUserMessages)
+  if(bcUserMessages.length > 0) {
+    const bcLastUserMessage = bcUserMessages[bcUserMessages.length - 1];
+    // console.log('bcLastUserMessage 1', bcLastUserMessage, bcLastUserMessage.scrollTop, bcLastUserMessage.scrollHeight, bcLastUserMessage.offsetTop, bcLastUserMessage.getBoundingClientRect())
+    const nextMessageAfterUserMessage = bcLastUserMessage.nextSibling
+    if(nextMessageAfterUserMessage) {
+      // scroll to next message after user message
+      // console.log('👇 scroll to nextMessageAfterUserMessage', nextMessageAfterUserMessage)
+      element.scrollTop = nextMessageAfterUserMessage.offsetTop
+    } else {
+      // scroll to user message
+      // console.log('👇 scroll to bcLastUserMessage')
+      element.scrollTop = bcLastUserMessage.offsetTop
+    }
+  } else {
+    // original: scroll to bottom
+    // console.log('👇 scroll to global element')
+    element.scrollTop = element.scrollHeight
+  }
 }
 var scrollToTop = function scrollToTop(element) {
   element.scrollTop = 0
