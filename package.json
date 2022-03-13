@@ -1,6 +1,6 @@
 {
   "name": "@livechat/ui-kit",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Chat UI Kit",
   "contributors": [
     "Konrad Kruk <k.kruk@livechatinc.com>",
@@ -72,6 +72,5 @@
     "rollup-plugin-uglify": "^6.0.2",
     "webpack": "4.19.1"
   },
-  "scripts": {
-  }
+  "scripts": {}
 }
