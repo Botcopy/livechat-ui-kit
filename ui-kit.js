@@ -469,16 +469,9 @@ var scrollToBottom = function scrollToBottom(element) {
   if(bcUserMessages.length > 0) {
     const bcLastUserMessage = bcUserMessages[bcUserMessages.length - 1];
     // console.log('bcLastUserMessage 1', bcLastUserMessage, bcLastUserMessage.scrollTop, bcLastUserMessage.scrollHeight, bcLastUserMessage.offsetTop, bcLastUserMessage.getBoundingClientRect())
-    const nextMessageAfterUserMessage = bcLastUserMessage.nextSibling
-    if(nextMessageAfterUserMessage) {
-      // scroll to next message after user message
-      // console.log('👇 scroll to nextMessageAfterUserMessage', nextMessageAfterUserMessage)
-      element.scrollTop = nextMessageAfterUserMessage.offsetTop
-    } else {
-      // scroll to user message
+       // scroll to user message
       // console.log('👇 scroll to bcLastUserMessage')
       element.scrollTop = bcLastUserMessage.offsetTop
-    }
   } else {
     // original: scroll to bottom
     // console.log('👇 scroll to global element')
