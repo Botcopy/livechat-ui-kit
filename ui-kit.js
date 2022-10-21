@@ -71,7 +71,7 @@ import forEach from 'callbag-for-each'
 import map from 'callbag-map'
 import pipe from 'callbag-pipe'
 
-const lcConversationId = window.Botcopy.lcConversationId
+const lcConversationId = window.Botcopy && window.Botcopy.livechat && window.Botcopy.livechat.currentRenderConversationId
 const WIDGET_ROOT_ID = 'botcopy-widget-root'
 const shadowHostId = `${WIDGET_ROOT_ID}${lcConversationId ? `-${lcConversationId}` : ``}`
 
