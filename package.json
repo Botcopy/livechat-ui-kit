@@ -1,6 +1,6 @@
 {
   "name": "@maxletou/livechat-ui-kit",
-  "version": "0.4.2",
+  "version": "0.4.4",
   "description": "Chat UI Kit",
   "contributors": [
     "Philipp Holly <office@pholly.at>"
@@ -8,7 +8,7 @@
   "license": "MIT",
   "main": "./ui-kit.js",
   "files": [
-    "dist"
+    "ui-kit.js"
   ],
   "keywords": [
     "livechat"
@@ -70,5 +70,14 @@
     "rollup-plugin-uglify": "^6.0.2",
     "webpack": "4.19.1"
   },
-  "scripts": {}
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botcopy/livechat-ui-kit.git"
+  },
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/Botcopy/livechat-ui-kit/issues"
+  },
+  "homepage": "https://github.com/Botcopy/livechat-ui-kit#readme"
 }
