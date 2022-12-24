@@ -11,7 +11,7 @@ import React__default, {
   useMemo,
   Children,
   cloneElement,
-  PureComponent
+  PureComponent,
 } from 'react'
 import createEmotionStyled from 'create-emotion-styled'
 import {
@@ -37,7 +37,7 @@ import {
   mapValues,
   trimEnd,
   identity,
-  debounce
+  debounce,
 } from '@livechat/data-utils'
 import _inheritsLoose from '@babel/runtime/helpers/esm/inheritsLoose'
 import { getDisplayName } from 'recompose'
@@ -53,14 +53,14 @@ import {
   oneOf,
   oneOfType,
   arrayOf,
-  number
+  number,
 } from 'prop-types'
 import ResizeObserver from 'resize-observer-polyfill'
 import isPropValid from '@emotion/is-prop-valid'
 import {
   CSSTransition,
   TransitionGroup,
-  Transition
+  Transition,
 } from 'react-transition-group'
 import Toggle from 'react-toggled'
 import { darken } from 'polished'
@@ -71,9 +71,14 @@ import forEach from 'callbag-for-each'
 import map from 'callbag-map'
 import pipe from 'callbag-pipe'
 
-const lcConversationId = window.Botcopy && window.Botcopy.livechat && window.Botcopy.livechat.currentRenderConversationId
+const lcConversationId =
+  window.Botcopy &&
+  window.Botcopy.livechat &&
+  window.Botcopy.livechat.currentRenderConversationId
 const WIDGET_ROOT_ID = 'botcopy-widget-root'
-const shadowHostId = `${WIDGET_ROOT_ID}${lcConversationId ? `-${lcConversationId}` : ``}`
+const shadowHostId = `${WIDGET_ROOT_ID}${
+  lcConversationId ? `-${lcConversationId}` : ``
+}`
 
 var emotion = createEmotion(
   {},
@@ -84,7 +89,7 @@ var emotion = createEmotion(
       document.getElementById(shadowHostId) &&
       document.getElementById(shadowHostId).shadowRoot
         ? document.getElementById(shadowHostId).shadowRoot
-        : document.getElementById(shadowHostId)
+        : document.getElementById(shadowHostId),
   }
 )
 var css = emotion.css,
@@ -154,12 +159,12 @@ var ThemeProvider = function ThemeProvider(_ref) {
   return createElement(
     ThemeProvider$1,
     {
-      theme: value
+      theme: value,
     },
     createElement(
       ThemeContext.Provider,
       {
-        value: value
+        value: value,
       },
       children
     )
@@ -205,7 +210,7 @@ var unpackThemeDescription = function (themeDescription) {
   return _extends(
     {
       css: css,
-      vars: vars
+      vars: vars,
     },
     unpackRest(rest)
   )
@@ -236,7 +241,8 @@ var parsePropsDescriptions = function parsePropsDescriptions(
       return components
     }
 
-    var componentDescription = ((_componentDescription = {}),
+    var componentDescription =
+      ((_componentDescription = {}),
       (_componentDescription[componentName] = themeProps),
       _componentDescription)
 
@@ -299,7 +305,7 @@ var withSubtheme = function (WrappedComponent) {
           return createElement(
             ThemeProvider,
             {
-              value: mergeThemes(props)
+              value: mergeThemes(props),
             },
             createElement(WrappedComponent, props)
           )
@@ -307,8 +313,8 @@ var withSubtheme = function (WrappedComponent) {
 
         return WithSubtheme
       })(Component)),
-      (_class.displayName = 'WithSubtheme(' + wrappedName + ')'),
-      _temp
+    (_class.displayName = 'WithSubtheme(' + wrappedName + ')'),
+    _temp
   )
 }
 
@@ -359,12 +365,12 @@ var parseStyles = function parseStyles(props, componentName, mapPropsToStyles) {
   return [
     vars,
     typeof mapPropsToStyles === 'function' &&
-    themeProps !== undefined &&
-    mapPropsToStyles(themeProps),
+      themeProps !== undefined &&
+      mapPropsToStyles(themeProps),
     css && unpackCss(props, css),
     mapCommonPropsToStyles(props),
     typeof mapPropsToStyles === 'function' && mapPropsToStyles(props),
-    style
+    style,
   ]
 }
 
@@ -382,8 +388,8 @@ var styled$1 = function (component, options) {
     if (registeredComponents[displayName]) {
       console.warn(
         '"' +
-        displayName +
-        '" is already registered. Those names should be unique.'
+          displayName +
+          '" is already registered. Those names should be unique.'
       )
     }
 
@@ -415,14 +421,14 @@ var styled$1 = function (component, options) {
       styles.concat([
         function (props) {
           return parseStyles(props, name, mapPropsToStyles)
-        }
+        },
       ])
     )
     styledComponent.__ui_kit_name = name
     return options.section
       ? Object.defineProperty(withSubtheme(styledComponent), 'toString', {
-        value: styledComponent.toString
-      })
+          value: styledComponent.toString,
+        })
       : styledComponent
   }
 }
@@ -466,16 +472,41 @@ var isScrolledToRight = function isScrolledToRight(element) {
 var isScrolledToLeft = function isScrolledToLeft(element) {
   return element.scrollLeft <= 0
 }
+
+var isUserMessage = function isUserMessage(element) {
+  return element.classList.contains('user-message')
+}
+
 var scrollToBottom = function scrollToBottom(element) {
-  // get message after a user message, and scroll to the top of it
-  const bcUserMessages = element.getElementsByClassName('botcopy--message-group user-message');
-  // console.log('scrollToBottom', element, element.scrollTop, element.scrollHeight, bcUserMessages)
-  if(bcUserMessages.length > 0) {
-    const bcLastUserMessage = bcUserMessages[bcUserMessages.length - 1];
+  const bcMessageGroups = Array.from(
+    element.getElementsByClassName('botcopy--message-group')
+  )
+  const lastResponseId =
+    bcMessageGroups[bcMessageGroups.length - 1].dataset.responseId
+  if (bcMessageGroups.length > 0 && lastResponseId) {
+    const firstMessageGroupOfLastResponseIndex = bcMessageGroups.findIndex(
+      ({ dataset }) => dataset.responseId === lastResponseId
+    )
+    const beforeFirstMessageGroupOfLastResponseIndex = Math.max(
+      firstMessageGroupOfLastResponseIndex - 1,
+      0
+    )
+
+    if (
+      isUserMessage(bcMessageGroups[beforeFirstMessageGroupOfLastResponseIndex])
+    ) {
+      // Scroll to user message before the first message of last response
+      element.scrollTop =
+        bcMessageGroups[beforeFirstMessageGroupOfLastResponseIndex].offsetTop
+    } else {
+      // Scroll to first message of last response
+      element.scrollTop =
+        bcMessageGroups[firstMessageGroupOfLastResponseIndex].offsetTop
+    }
+    // console.log('scrollToBottom', element, element.scrollTop, element.scrollHeight, bcUserMessages)
     // console.log('bcLastUserMessage 1', bcLastUserMessage, bcLastUserMessage.scrollTop, bcLastUserMessage.scrollHeight, bcLastUserMessage.offsetTop, bcLastUserMessage.getBoundingClientRect())
-       // scroll to user message
-      // console.log('👇 scroll to bcLastUserMessage')
-      element.scrollTop = bcLastUserMessage.offsetTop
+    // scroll to user message
+    // console.log('👇 scroll to bcLastUserMessage')
   } else {
     // original: scroll to bottom
     // console.log('👇 scroll to global element')
@@ -619,7 +650,7 @@ var withPinnedScroll = function (_temp) {
                 return isScrollOnTop(_this._listRef, pinThreshold)
               },
               scrollToBottom: _this.scrollToBottom,
-              scrollToTop: _this.scrollToTop
+              scrollToTop: _this.scrollToTop,
             }
             return _this
           }
@@ -666,15 +697,15 @@ var withPinnedScroll = function (_temp) {
             var node = this._listRef
             return reverse
               ? {
-                shouldScrollToEdge: isScrollOnTop(node, pinThreshold)
-              }
+                  shouldScrollToEdge: isScrollOnTop(node, pinThreshold),
+                }
               : {
-                shouldScrollToEdge: isScrollOnBottom(node, pinThreshold),
-                prevScrollTop: node.scrollTop,
-                scrollTopFromBottomFold: Math.abs(
-                  node.scrollTop - node.scrollHeight
-                )
-              }
+                  shouldScrollToEdge: isScrollOnBottom(node, pinThreshold),
+                  prevScrollTop: node.scrollTop,
+                  scrollTopFromBottomFold: Math.abs(
+                    node.scrollTop - node.scrollHeight
+                  ),
+                }
           }
 
           _proto.componentDidUpdate = function componentDidUpdate(
@@ -703,22 +734,21 @@ var withPinnedScroll = function (_temp) {
             }
           }
 
-          _proto._maybeRestoreScrollPosition = function _maybeRestoreScrollPosition(
-            _ref2
-          ) {
-            var prevScrollTop = _ref2.prevScrollTop,
-              scrollTopFromBottomFold = _ref2.scrollTopFromBottomFold
-            var node = this._listRef // if we stay on the top of the list and new items get appended at the top
-            // then the scroll position wont change but we have to restore the position nevertheless
+          _proto._maybeRestoreScrollPosition =
+            function _maybeRestoreScrollPosition(_ref2) {
+              var prevScrollTop = _ref2.prevScrollTop,
+                scrollTopFromBottomFold = _ref2.scrollTopFromBottomFold
+              var node = this._listRef // if we stay on the top of the list and new items get appended at the top
+              // then the scroll position wont change but we have to restore the position nevertheless
 
-            if (node.scrollTop === prevScrollTop && prevScrollTop !== 0) {
-              return
+              if (node.scrollTop === prevScrollTop && prevScrollTop !== 0) {
+                return
+              }
+
+              node.scrollTop = Math.abs(
+                scrollTopFromBottomFold - node.scrollHeight
+              )
             }
-
-            node.scrollTop = Math.abs(
-              scrollTopFromBottomFold - node.scrollHeight
-            )
-          }
 
           _proto.render = function render() {
             var _this$props = this.props,
@@ -730,7 +760,7 @@ var withPinnedScroll = function (_temp) {
                 'containScrollInSubtree',
                 'onScrollBottom',
                 'onScrollTop',
-                'usePinnedScroll'
+                'usePinnedScroll',
               ])
 
             return createElement(
@@ -738,34 +768,34 @@ var withPinnedScroll = function (_temp) {
               _extends({}, props, this.scrollProps, {
                 innerRef: this._getListRef,
                 onScroll: this._handleScroll,
-                onWheel: this._handleWheel
+                onWheel: this._handleWheel,
               })
             )
           }
 
           return WithPinnedScroll
         })(Component)),
-        (_class.displayName =
-          'WithPinnedScroll(' + getDisplayName(WrappedComponent) + ')'),
-        (_class.propTypes = {
-          containScrollInSubtree: bool,
-          innerRef: func,
-          onScroll: func,
-          onScrollBottom: func,
-          onScrollTop: func,
-          onWheel: func,
-          usePinnedScroll: bool
-        }),
-        (_class.defaultProps = {
-          containScrollInSubtree: false,
-          innerRef: noop,
-          onScrollBottom: noop,
-          onScrollTop: noop,
-          onWheel: noop,
-          onScroll: noop,
-          usePinnedScroll: true
-        }),
-        _temp2
+      (_class.displayName =
+        'WithPinnedScroll(' + getDisplayName(WrappedComponent) + ')'),
+      (_class.propTypes = {
+        containScrollInSubtree: bool,
+        innerRef: func,
+        onScroll: func,
+        onScrollBottom: func,
+        onScrollTop: func,
+        onWheel: func,
+        usePinnedScroll: bool,
+      }),
+      (_class.defaultProps = {
+        containScrollInSubtree: false,
+        innerRef: noop,
+        onScrollBottom: noop,
+        onScrollTop: noop,
+        onWheel: noop,
+        onScroll: noop,
+        usePinnedScroll: true,
+      }),
+      _temp2
     )
   }
 }
@@ -775,10 +805,10 @@ var StyledList =
   styled$1('div', {
     displayName: 'ChatList',
     section: true,
-    target: 'egyled90'
+    target: 'egyled90',
   })()
 var ChatList = withPinnedScroll({
-  reverse: true
+  reverse: true,
 })(StyledList)
 
 var mapPropsToStyles = function mapPropsToStyles(props) {
@@ -817,12 +847,12 @@ var StyledRow =
   /*#__PURE__*/
   styled$1('div', {
     mapPropsToStyles: mapPropsToStyles,
-    target: 'e108e6fy0'
+    target: 'e108e6fy0',
   })('display:flex;min-width:0;')
 
 var mapPropsToStyles$1 = function mapPropsToStyles(props) {
   return {
-    background: props.active ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0)'
+    background: props.active ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0)',
   }
 }
 
@@ -832,7 +862,7 @@ var StyledItem =
     displayName: 'ChatListItem',
     mapPropsToStyles: mapPropsToStyles$1,
     section: true,
-    target: 'edumshe0'
+    target: 'edumshe0',
   })(
     'padding:0.5em;transition:background 0.2s;border-bottom:1px solid rgba(0,0,0,0.1);&:hover{cursor:pointer;}'
   )
@@ -843,7 +873,7 @@ var ChatListItem = function ChatListItem(props) {
 
 ChatListItem.propTypes = {
   active: bool,
-  children: node.isRequired
+  children: node.isRequired,
 }
 
 var StyledBar =
@@ -851,7 +881,7 @@ var StyledBar =
   styled$1(StyledRow, {
     displayName: 'AgentBar',
     section: true,
-    target: 'e1j58gbc0'
+    target: 'e1j58gbc0',
   })('padding:1em;')
 
 var AgentBar = function AgentBar(props) {
@@ -859,7 +889,7 @@ var AgentBar = function AgentBar(props) {
     StyledBar,
     _extends(
       {
-        verticalAlign: 'center'
+        verticalAlign: 'center',
       },
       props
     )
@@ -867,7 +897,7 @@ var AgentBar = function AgentBar(props) {
 }
 
 AgentBar.propTypes = {
-  children: node
+  children: node,
 }
 
 var mapPropsToStyles$2 = function mapPropsToStyles(_ref) {
@@ -880,8 +910,8 @@ var mapPropsToStyles$2 = function mapPropsToStyles(_ref) {
   return {
     fill: color,
     '& *': {
-      fill: color
-    }
+      fill: color,
+    },
   }
 }
 
@@ -892,7 +922,7 @@ var createStyledIcon = memoize(function (Icon) {
       displayType: 'Icon',
       mapPropsToStyles: mapPropsToStyles$2,
       shouldForwardProp: isPropValid,
-      target: 'e5ibypu0'
+      target: 'e5ibypu0',
     })('&{display:block;}&,& *{fill:currentColor;}')
   )
 })
@@ -906,7 +936,7 @@ var Icon = function Icon(_ref2) {
 }
 
 Icon.propTypes = {
-  children: node.isRequired
+  children: node.isRequired,
 }
 
 var Add = function (_ref) {
@@ -919,7 +949,7 @@ var Add = function (_ref) {
       {
         height: '20px',
         viewBox: '0 0 20 20',
-        width: '20px'
+        width: '20px',
       },
       props
     ),
@@ -929,17 +959,16 @@ var Add = function (_ref) {
         fill: 'none',
         fillRule: 'evenodd',
         stroke: 'none',
-        strokeWidth: '1'
+        strokeWidth: '1',
       },
       React__default.createElement(
         'g',
         {
           fill: '#000000',
-          fillRule: 'nonzero'
+          fillRule: 'nonzero',
         },
         React__default.createElement('path', {
-          d:
-            'M10,0 C4.48,0 0,4.48 0,10 C0,15.52 4.48,20 10,20 C15.52,20 20,15.52 20,10 C20,4.48 15.52,0 10,0 Z M15,11 L11,11 L11,15 L9,15 L9,11 L5,11 L5,9 L9,9 L9,5 L11,5 L11,9 L15,9 L15,11 Z'
+          d: 'M10,0 C4.48,0 0,4.48 0,10 C0,15.52 4.48,20 10,20 C15.52,20 20,15.52 20,10 C20,4.48 15.52,0 10,0 Z M15,11 L11,11 L11,15 L9,15 L9,11 L5,11 L5,9 L9,9 L9,5 L11,5 L11,9 L15,9 L15,11 Z',
         })
       )
     )
@@ -960,7 +989,7 @@ var ArrowLeft = function (_ref) {
       {
         width: '8px',
         height: '13px',
-        viewBox: '0 0 8 13'
+        viewBox: '0 0 8 13',
       },
       props
     ),
@@ -970,29 +999,29 @@ var ArrowLeft = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
           transform: 'translate(-840.000000, -560.000000)',
           fill: '#424D57',
-          fillRule: 'nonzero'
+          fillRule: 'nonzero',
         },
         React__default.createElement(
           'g',
           {
             transform:
-              'translate(845.000000, 567.000000) scale(-1, 1) translate(-845.000000, -567.000000) translate(831.000000, 553.000000)'
+              'translate(845.000000, 567.000000) scale(-1, 1) translate(-845.000000, -567.000000) translate(831.000000, 553.000000)',
           },
           React__default.createElement(
             'g',
             {
-              transform: 'translate(3.000000, 1.000000)'
+              transform: 'translate(3.000000, 1.000000)',
             },
             React__default.createElement('polygon', {
               points:
-                '8.59 17.34 13.17 12.75 8.59 8.16 10 6.75 16 12.75 10 18.75'
+                '8.59 17.34 13.17 12.75 8.59 8.16 10 6.75 16 12.75 10 18.75',
             })
           )
         )
@@ -1015,7 +1044,7 @@ var ArrowRight = function (_ref) {
       {
         width: '8px',
         height: '13px',
-        viewBox: '0 0 8 13'
+        viewBox: '0 0 8 13',
       },
       props
     ),
@@ -1025,28 +1054,28 @@ var ArrowRight = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
           transform: 'translate(-1104.000000, -560.000000)',
           fill: '#424D57',
-          fillRule: 'nonzero'
+          fillRule: 'nonzero',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(1094.000000, 553.000000)'
+            transform: 'translate(1094.000000, 553.000000)',
           },
           React__default.createElement(
             'g',
             {
-              transform: 'translate(2.000000, 1.000000)'
+              transform: 'translate(2.000000, 1.000000)',
             },
             React__default.createElement('polygon', {
               points:
-                '8.59 17.34 13.17 12.75 8.59 8.16 10 6.75 16 12.75 10 18.75'
+                '8.59 17.34 13.17 12.75 8.59 8.16 10 6.75 16 12.75 10 18.75',
             })
           )
         )
@@ -1069,7 +1098,7 @@ var Attach = function (_ref) {
       {
         width: '20px',
         height: '11px',
-        viewBox: '0 0 20 11'
+        viewBox: '0 0 20 11',
       },
       props
     ),
@@ -1079,23 +1108,22 @@ var Attach = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
           transform: 'translate(-1098.000000, -754.000000)',
           fill: '#424D57',
-          fillRule: 'nonzero'
+          fillRule: 'nonzero',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(1096.000000, 747.000000)'
+            transform: 'translate(1096.000000, 747.000000)',
           },
           React__default.createElement('path', {
-            d:
-              'M2,12.5 C2,9.46 4.46,7 7.5,7 L18,7 C20.21,7 22,8.79 22,11 C22,13.21 20.21,15 18,15 L9.5,15 C8.12,15 7,13.88 7,12.5 C7,11.12 8.12,10 9.5,10 L17,10 L17,12 L9.41,12 C8.86,12 8.86,13 9.41,13 L18,13 C19.1,13 20,12.1 20,11 C20,9.9 19.1,9 18,9 L7.5,9 C5.57,9 4,10.57 4,12.5 C4,14.43 5.57,16 7.5,16 L17,16 L17,18 L7.5,18 C4.46,18 2,15.54 2,12.5 Z'
+            d: 'M2,12.5 C2,9.46 4.46,7 7.5,7 L18,7 C20.21,7 22,8.79 22,11 C22,13.21 20.21,15 18,15 L9.5,15 C8.12,15 7,13.88 7,12.5 C7,11.12 8.12,10 9.5,10 L17,10 L17,12 L9.41,12 C8.86,12 8.86,13 9.41,13 L18,13 C19.1,13 20,12.1 20,11 C20,9.9 19.1,9 18,9 L7.5,9 C5.57,9 4,10.57 4,12.5 C4,14.43 5.57,16 7.5,16 L17,16 L17,18 L7.5,18 C4.46,18 2,15.54 2,12.5 Z',
           })
         )
       )
@@ -1117,8 +1145,8 @@ var Person = function (_ref) {
       {
         viewBox: '0 0 58 58',
         style: {
-          enableBackground: 'new 0 0 58 58'
-        }
+          enableBackground: 'new 0 0 58 58',
+        },
       },
       props
     ),
@@ -1126,19 +1154,18 @@ var Person = function (_ref) {
       style: {
         fillRule: 'evenodd',
         clipRule: 'evenodd',
-        fill: '#F2F2F2'
+        fill: '#F2F2F2',
       },
       width: '58',
-      height: '58'
+      height: '58',
     }),
     React__default.createElement('path', {
       style: {
         fillRule: 'evenodd',
         clipRule: 'evenodd',
-        fill: '#424D57'
+        fill: '#424D57',
       },
-      d:
-        'M40,38c7.3,3.8,11,8.4,11,13.9v6c0,0.2-0.1,0.3-0.2,0.4C47.9,62,6.1,62,6.1,58l0-0.1l0-0.1 v-6c0-5.5,3.7-10.1,11-13.9c1.2-0.7,2-0.2,2-0.2c2.5,2.3,5.8,3.7,9.5,3.7l-0.1,0l0.3,0c3.5-0.1,6.7-1.5,9.1-3.7 C38,37.8,38.8,37.3,40,38z M28.5,17C34.3,17,39,21.7,39,27.5S34.3,38,28.5,38S18,33.3,18,27.5S22.7,17,28.5,17z'
+      d: 'M40,38c7.3,3.8,11,8.4,11,13.9v6c0,0.2-0.1,0.3-0.2,0.4C47.9,62,6.1,62,6.1,58l0-0.1l0-0.1 v-6c0-5.5,3.7-10.1,11-13.9c1.2-0.7,2-0.2,2-0.2c2.5,2.3,5.8,3.7,9.5,3.7l-0.1,0l0.3,0c3.5-0.1,6.7-1.5,9.1-3.7 C38,37.8,38.8,37.3,40,38z M28.5,17C34.3,17,39,21.7,39,27.5S34.3,38,28.5,38S18,33.3,18,27.5S22.7,17,28.5,17z',
     })
   )
 }
@@ -1157,7 +1184,7 @@ var Chat = function (_ref) {
       {
         width: '28px',
         height: '28px',
-        viewBox: '0 0 28 28'
+        viewBox: '0 0 28 28',
       },
       props
     ),
@@ -1167,16 +1194,15 @@ var Chat = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
-          fill: '#000000'
+          fill: '#000000',
         },
         React__default.createElement('path', {
-          d:
-            'M14,25.5 C12.4,25.5 10.8,25.2 9.4,24.7 L4.5,27.5 L4.5,21.9 C2,19.6 0.5,16.5 0.5,13 C0.5,6.1 6.5,0.5 14,0.5 C21.5,0.5 27.5,6.1 27.5,13 C27.5,19.9 21.5,25.5 14,25.5 L14,25.5 Z M9,11.5 C8.2,11.5 7.5,12.2 7.5,13 C7.5,13.8 8.2,14.5 9,14.5 C9.8,14.5 10.5,13.8 10.5,13 C10.5,12.2 9.8,11.5 9,11.5 L9,11.5 Z M14,11.5 C13.2,11.5 12.5,12.2 12.5,13 C12.5,13.8 13.2,14.5 14,14.5 C14.8,14.5 15.5,13.8 15.5,13 C15.5,12.2 14.8,11.5 14,11.5 L14,11.5 Z M19,11.5 C18.2,11.5 17.5,12.2 17.5,13 C17.5,13.8 18.2,14.5 19,14.5 C19.8,14.5 20.5,13.8 20.5,13 C20.5,12.2 19.8,11.5 19,11.5 L19,11.5 Z'
+          d: 'M14,25.5 C12.4,25.5 10.8,25.2 9.4,24.7 L4.5,27.5 L4.5,21.9 C2,19.6 0.5,16.5 0.5,13 C0.5,6.1 6.5,0.5 14,0.5 C21.5,0.5 27.5,6.1 27.5,13 C27.5,19.9 21.5,25.5 14,25.5 L14,25.5 Z M9,11.5 C8.2,11.5 7.5,12.2 7.5,13 C7.5,13.8 8.2,14.5 9,14.5 C9.8,14.5 10.5,13.8 10.5,13 C10.5,12.2 9.8,11.5 9,11.5 L9,11.5 Z M14,11.5 C13.2,11.5 12.5,12.2 12.5,13 C12.5,13.8 13.2,14.5 14,14.5 C14.8,14.5 15.5,13.8 15.5,13 C15.5,12.2 14.8,11.5 14,11.5 L14,11.5 Z M19,11.5 C18.2,11.5 17.5,12.2 17.5,13 C17.5,13.8 18.2,14.5 19,14.5 C19.8,14.5 20.5,13.8 20.5,13 C20.5,12.2 19.8,11.5 19,11.5 L19,11.5 Z',
         })
       )
     )
@@ -1197,7 +1223,7 @@ var CheckboxOff = function (_ref) {
       {
         width: '16px',
         height: '16px',
-        viewBox: '0 0 16 16'
+        viewBox: '0 0 16 16',
       },
       props
     ),
@@ -1207,17 +1233,17 @@ var CheckboxOff = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
-          transform: 'translate(-861.000000, -556.000000)'
+          transform: 'translate(-861.000000, -556.000000)',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(861.000000, 556.000000)'
+            transform: 'translate(861.000000, 556.000000)',
           },
           React__default.createElement(
             'g',
@@ -1231,8 +1257,8 @@ var CheckboxOff = function (_ref) {
               height: '15',
               rx: '4',
               style: {
-                fill: 'none'
-              }
+                fill: 'none',
+              },
             })
           )
         )
@@ -1255,7 +1281,7 @@ var CheckboxOn = function (_ref) {
       {
         width: '16px',
         height: '16px',
-        viewBox: '0 0 16 16'
+        viewBox: '0 0 16 16',
       },
       props
     ),
@@ -1265,17 +1291,17 @@ var CheckboxOn = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
-          transform: 'translate(-861.000000, -526.000000)'
+          transform: 'translate(-861.000000, -526.000000)',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(861.000000, 526.000000)'
+            transform: 'translate(861.000000, 526.000000)',
           },
           React__default.createElement(
             'g',
@@ -1289,14 +1315,14 @@ var CheckboxOn = function (_ref) {
               height: '15',
               rx: '4',
               style: {
-                fill: 'none'
-              }
+                fill: 'none',
+              },
             })
           ),
           React__default.createElement('polygon', {
             fill: '#4384F5',
             points:
-              '4 8.17070347 6.8554326 11.0329509 12.4300003 5.44475349 10.9852468 4 6.84861773 8.13662909 5.44475349 6.72594998'
+              '4 8.17070347 6.8554326 11.0329509 12.4300003 5.44475349 10.9852468 4 6.84861773 8.13662909 5.44475349 6.72594998',
           })
         )
       )
@@ -1318,7 +1344,7 @@ var Close = function (_ref) {
       {
         height: '14px',
         viewBox: '0 0 14 14',
-        width: '14px'
+        width: '14px',
       },
       props
     ),
@@ -1328,12 +1354,12 @@ var Close = function (_ref) {
         fill: 'none',
         fillRule: 'evenodd',
         stroke: 'none',
-        strokeWidth: '1'
+        strokeWidth: '1',
       },
       React__default.createElement('polygon', {
         fill: '#000000',
         points:
-          '14 1.41 12.59 8.8817842e-16 7 5.59 1.41 8.8817842e-16 0 1.41 5.59 7 0 12.59 1.41 14 7 8.41 12.59 14 14 12.59 8.41 7'
+          '14 1.41 12.59 8.8817842e-16 7 5.59 1.41 8.8817842e-16 0 1.41 5.59 7 0 12.59 1.41 14 7 8.41 12.59 14 14 12.59 8.41 7',
       })
     )
   )
@@ -1353,7 +1379,7 @@ var Email = function (_ref) {
       {
         width: '18px',
         height: '14px',
-        viewBox: '0 0 18 14'
+        viewBox: '0 0 18 14',
       },
       props
     ),
@@ -1363,17 +1389,17 @@ var Email = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
-          transform: 'translate(-853.000000, -227.000000)'
+          transform: 'translate(-853.000000, -227.000000)',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(830.000000, 207.000000)'
+            transform: 'translate(830.000000, 207.000000)',
           },
           React__default.createElement(
             'g',
@@ -1381,14 +1407,13 @@ var Email = function (_ref) {
             React__default.createElement(
               'g',
               {
-                transform: 'translate(22.000000, 17.000000)'
+                transform: 'translate(22.000000, 17.000000)',
               },
               React__default.createElement('path', {
-                d:
-                  'M16.6666667,3.33333333 L3.33333333,3.33333333 C2.41666667,3.33333333 1.675,4.08333333 1.675,5 L1.66666667,15 C1.66666667,15.9166667 2.41666667,16.6666667 3.33333333,16.6666667 L16.6666667,16.6666667 C17.5833333,16.6666667 18.3333333,15.9166667 18.3333333,15 L18.3333333,5 C18.3333333,4.08333333 17.5833333,3.33333333 16.6666667,3.33333333 Z M16.6666667,15 L3.33333333,15 L3.33333333,6.66666667 L10,10.8333333 L16.6666667,6.66666667 L16.6666667,15 Z M10,9.16666667 L3.33333333,5 L16.6666667,5 L10,9.16666667 Z',
+                d: 'M16.6666667,3.33333333 L3.33333333,3.33333333 C2.41666667,3.33333333 1.675,4.08333333 1.675,5 L1.66666667,15 C1.66666667,15.9166667 2.41666667,16.6666667 3.33333333,16.6666667 L16.6666667,16.6666667 C17.5833333,16.6666667 18.3333333,15.9166667 18.3333333,15 L18.3333333,5 C18.3333333,4.08333333 17.5833333,3.33333333 16.6666667,3.33333333 Z M16.6666667,15 L3.33333333,15 L3.33333333,6.66666667 L10,10.8333333 L16.6666667,6.66666667 L16.6666667,15 Z M10,9.16666667 L3.33333333,5 L16.6666667,5 L10,9.16666667 Z',
                 fillOpacity: '0.6',
                 fill: '#424D57',
-                fillRule: 'nonzero'
+                fillRule: 'nonzero',
               })
             )
           )
@@ -1412,7 +1437,7 @@ var EmailFilled = function (_ref) {
       {
         width: '21px',
         height: '16px',
-        viewBox: '0 0 20 16'
+        viewBox: '0 0 20 16',
       },
       props
     ),
@@ -1422,13 +1447,12 @@ var EmailFilled = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement('path', {
-        d:
-          'M18,0 L2,0 C0.9,0 0.01,0.9 0.01,2 L0,14 C0,15.1 0.9,16 2,16 L18,16 C19.1,16 20,15.1 20,14 L20,2 C20,0.9 19.1,0 18,0 Z M17.6,4.25 L10.53,8.67 C10.21,8.87 9.79,8.87 9.47,8.67 L2.4,4.25 C2.15,4.09 2,3.82 2,3.53 C2,2.86 2.73,2.46 3.3,2.81 L10,7 L16.7,2.81 C17.27,2.46 18,2.86 18,3.53 C18,3.82 17.85,4.09 17.6,4.25 Z',
+        d: 'M18,0 L2,0 C0.9,0 0.01,0.9 0.01,2 L0,14 C0,15.1 0.9,16 2,16 L18,16 C19.1,16 20,15.1 20,14 L20,2 C20,0.9 19.1,0 18,0 Z M17.6,4.25 L10.53,8.67 C10.21,8.87 9.79,8.87 9.47,8.67 L2.4,4.25 C2.15,4.09 2,3.82 2,3.53 C2,2.86 2.73,2.46 3.3,2.81 L10,7 L16.7,2.81 C17.27,2.46 18,2.86 18,3.53 C18,3.82 17.85,4.09 17.6,4.25 Z',
         fill: '#000000',
-        fillRule: 'nonzero'
+        fillRule: 'nonzero',
       })
     )
   )
@@ -1448,7 +1472,7 @@ var Emoji = function (_ref) {
       {
         height: '20px',
         viewBox: '0 0 20 20',
-        width: '20px'
+        width: '20px',
       },
       props
     ),
@@ -1458,16 +1482,15 @@ var Emoji = function (_ref) {
         fill: 'none',
         fillRule: 'evenodd',
         stroke: 'none',
-        strokeWidth: '1'
+        strokeWidth: '1',
       },
       React__default.createElement(
         'g',
         {
-          fill: '#000000'
+          fill: '#000000',
         },
         React__default.createElement('path', {
-          d:
-            'M13.5,9 C14.3,9 15,8.3 15,7.5 C15,6.7 14.3,6 13.5,6 C12.7,6 12,6.7 12,7.5 C12,8.3 12.7,9 13.5,9 L13.5,9 Z M6.5,9 C7.3,9 8,8.3 8,7.5 C8,6.7 7.3,6 6.5,6 C5.7,6 5,6.7 5,7.5 C5,8.3 5.7,9 6.5,9 L6.5,9 Z M10,16 C12.6,16 14.8,14.3 15.7,12 L4.3,12 C5.2,14.3 7.4,16 10,16 L10,16 Z M10,0 C4.5,0 0,4.5 0,10 C0,15.5 4.5,20 10,20 C15.5,20 20,15.5 20,10 C20,4.5 15.5,0 10,0 L10,0 Z M10,18 C5.6,18 2,14.4 2,10 C2,5.6 5.6,2 10,2 C14.4,2 18,5.6 18,10 C18,14.4 14.4,18 10,18 L10,18 Z'
+          d: 'M13.5,9 C14.3,9 15,8.3 15,7.5 C15,6.7 14.3,6 13.5,6 C12.7,6 12,6.7 12,7.5 C12,8.3 12.7,9 13.5,9 L13.5,9 Z M6.5,9 C7.3,9 8,8.3 8,7.5 C8,6.7 7.3,6 6.5,6 C5.7,6 5,6.7 5,7.5 C5,8.3 5.7,9 6.5,9 L6.5,9 Z M10,16 C12.6,16 14.8,14.3 15.7,12 L4.3,12 C5.2,14.3 7.4,16 10,16 L10,16 Z M10,0 C4.5,0 0,4.5 0,10 C0,15.5 4.5,20 10,20 C15.5,20 20,15.5 20,10 C20,4.5 15.5,0 10,0 L10,0 Z M10,18 C5.6,18 2,14.4 2,10 C2,5.6 5.6,2 10,2 C14.4,2 18,5.6 18,10 C18,14.4 14.4,18 10,18 L10,18 Z',
         })
       )
     )
@@ -1488,7 +1511,7 @@ var Exit = function (_ref) {
       {
         width: '24px',
         height: '24px',
-        viewBox: '0 0 24 24'
+        viewBox: '0 0 24 24',
       },
       props
     ),
@@ -1498,23 +1521,22 @@ var Exit = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
           transform: 'translate(-963.000000, -248.000000)',
           fill: '#424D57',
-          fillRule: 'nonzero'
+          fillRule: 'nonzero',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(960.000000, 245.000000)'
+            transform: 'translate(960.000000, 245.000000)',
           },
           React__default.createElement('path', {
-            d:
-              'M12.6125,19.4875 L14.375,21.25 L20.625,15 L14.375,8.75 L12.6125,10.5125 L15.8375,13.75 L3.75,13.75 L3.75,16.25 L15.8375,16.25 L12.6125,19.4875 Z M23.75,3.75 L6.25,3.75 C4.8625,3.75 3.75,4.875 3.75,6.25 L3.75,11.25 L6.25,11.25 L6.25,6.25 L23.75,6.25 L23.75,23.75 L6.25,23.75 L6.25,18.75 L3.75,18.75 L3.75,23.75 C3.75,25.125 4.8625,26.25 6.25,26.25 L23.75,26.25 C25.125,26.25 26.25,25.125 26.25,23.75 L26.25,6.25 C26.25,4.875 25.125,3.75 23.75,3.75 Z'
+            d: 'M12.6125,19.4875 L14.375,21.25 L20.625,15 L14.375,8.75 L12.6125,10.5125 L15.8375,13.75 L3.75,13.75 L3.75,16.25 L15.8375,16.25 L12.6125,19.4875 Z M23.75,3.75 L6.25,3.75 C4.8625,3.75 3.75,4.875 3.75,6.25 L3.75,11.25 L6.25,11.25 L6.25,6.25 L23.75,6.25 L23.75,23.75 L6.25,23.75 L6.25,18.75 L3.75,18.75 L3.75,23.75 C3.75,25.125 4.8625,26.25 6.25,26.25 L23.75,26.25 C25.125,26.25 26.25,25.125 26.25,23.75 L26.25,6.25 C26.25,4.875 25.125,3.75 23.75,3.75 Z',
           })
         )
       )
@@ -1536,7 +1558,7 @@ var Hourglass = function (_ref) {
       {
         width: '16px',
         height: '26px',
-        viewBox: '0 0 16 26'
+        viewBox: '0 0 16 26',
       },
       props
     ),
@@ -1546,23 +1568,22 @@ var Hourglass = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
           transform: 'translate(-967.000000, -284.000000)',
           fill: '#424D57',
-          fillRule: 'nonzero'
+          fillRule: 'nonzero',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(960.000000, 282.000000)'
+            transform: 'translate(960.000000, 282.000000)',
           },
           React__default.createElement('path', {
-            d:
-              'M7.5,2.5 L7.5,10 L7.5125,10 L7.5,10.0125 L12.5,15 L7.5,20 L7.5125,20.0125 L7.5,20.0125 L7.5,27.5 L22.5,27.5 L22.5,20.0125 L22.4875,20.0125 L22.5,20 L17.5,15 L22.5,10.0125 L22.4875,10 L22.5,10 L22.5,2.5 L7.5,2.5 Z M20,20.625 L20,25 L10,25 L10,20.625 L15,15.625 L20,20.625 Z M15,14.375 L10,9.375 L10,5 L20,5 L20,9.375 L15,14.375 Z'
+            d: 'M7.5,2.5 L7.5,10 L7.5125,10 L7.5,10.0125 L12.5,15 L7.5,20 L7.5125,20.0125 L7.5,20.0125 L7.5,27.5 L22.5,27.5 L22.5,20.0125 L22.4875,20.0125 L22.5,20 L17.5,15 L22.5,10.0125 L22.4875,10 L22.5,10 L22.5,2.5 L7.5,2.5 Z M20,20.625 L20,25 L10,25 L10,20.625 L15,15.625 L20,20.625 Z M15,14.375 L10,9.375 L10,5 L20,5 L20,9.375 L15,14.375 Z',
           })
         )
       )
@@ -1585,12 +1606,12 @@ var Maximize = function (_ref) {
         fill: 'none',
         height: '24',
         viewBox: '0 0 24 24',
-        width: '24'
+        width: '24',
       },
       props
     ),
     React__default.createElement('path', {
-      d: 'M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z'
+      d: 'M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z',
     })
   )
 }
@@ -1609,7 +1630,7 @@ var MenuVertical = function (_ref) {
       {
         height: '4px',
         viewBox: '0 0 16 4',
-        width: '16px'
+        width: '16px',
       },
       props
     ),
@@ -1619,16 +1640,15 @@ var MenuVertical = function (_ref) {
         fill: 'none',
         fillRule: 'evenodd',
         stroke: 'none',
-        strokeWidth: '1'
+        strokeWidth: '1',
       },
       React__default.createElement(
         'g',
         {
-          fill: '#000000'
+          fill: '#000000',
         },
         React__default.createElement('path', {
-          d:
-            'M2,0 C0.9,0 0,0.9 0,2 C0,3.1 0.9,4 2,4 C3.1,4 4,3.1 4,2 C4,0.9 3.1,0 2,0 Z M14,0 C12.9,0 12,0.9 12,2 C12,3.1 12.9,4 14,4 C15.1,4 16,3.1 16,2 C16,0.9 15.1,0 14,0 Z M8,0 C6.9,0 6,0.9 6,2 C6,3.1 6.9,4 8,4 C9.1,4 10,3.1 10,2 C10,0.9 9.1,0 8,0 Z'
+          d: 'M2,0 C0.9,0 0,0.9 0,2 C0,3.1 0.9,4 2,4 C3.1,4 4,3.1 4,2 C4,0.9 3.1,0 2,0 Z M14,0 C12.9,0 12,0.9 12,2 C12,3.1 12.9,4 14,4 C15.1,4 16,3.1 16,2 C16,0.9 15.1,0 14,0 Z M8,0 C6.9,0 6,0.9 6,2 C6,3.1 6.9,4 8,4 C9.1,4 10,3.1 10,2 C10,0.9 9.1,0 8,0 Z',
         })
       )
     )
@@ -1650,12 +1670,12 @@ var Minimize = function (_ref) {
         fill: 'none',
         height: '24',
         viewBox: '0 0 24 24',
-        width: '24'
+        width: '24',
       },
       props
     ),
     React__default.createElement('path', {
-      d: 'M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'
+      d: 'M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z',
     })
   )
 }
@@ -1674,7 +1694,7 @@ var Mute = function (_ref) {
       {
         width: '16px',
         height: '16px',
-        viewBox: '0 0 16 16'
+        viewBox: '0 0 16 16',
       },
       props
     ),
@@ -1684,19 +1704,19 @@ var Mute = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
           transform: 'translate(-854.000000, -325.000000)',
           fill: '#424D57',
-          fillRule: 'nonzero'
+          fillRule: 'nonzero',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(830.000000, 207.000000)'
+            transform: 'translate(830.000000, 207.000000)',
           },
           React__default.createElement(
             'g',
@@ -1704,11 +1724,10 @@ var Mute = function (_ref) {
             React__default.createElement(
               'g',
               {
-                transform: 'translate(22.000000, 116.000000)'
+                transform: 'translate(22.000000, 116.000000)',
               },
               React__default.createElement('path', {
-                d:
-                  'M13.75,10 C13.75,8.525 12.9,7.25833333 11.6666667,6.64166667 L11.6666667,8.48333333 L13.7083333,10.525 C13.7333333,10.3583333 13.75,10.1833333 13.75,10 Z M15.8333333,10 C15.8333333,10.7833333 15.6666667,11.5166667 15.3833333,12.2 L16.6416667,13.4583333 C17.1916667,12.425 17.5,11.25 17.5,10 C17.5,6.43333333 15.0083333,3.45 11.6666667,2.69166667 L11.6666667,4.40833333 C14.075,5.125 15.8333333,7.35833333 15.8333333,10 Z M3.55833333,2.5 L2.5,3.55833333 L6.44166667,7.5 L2.5,7.5 L2.5,12.5 L5.83333333,12.5 L10,16.6666667 L10,11.0583333 L13.5416667,14.6 C12.9833333,15.0333333 12.3583333,15.375 11.6666667,15.5833333 L11.6666667,17.3 C12.8166667,17.0416667 13.8583333,16.5083333 14.7416667,15.7916667 L16.4416667,17.5 L17.5,16.4416667 L10,8.94166667 L3.55833333,2.5 Z M10,3.33333333 L8.25833333,5.075 L10,6.81666667 L10,3.33333333 Z'
+                d: 'M13.75,10 C13.75,8.525 12.9,7.25833333 11.6666667,6.64166667 L11.6666667,8.48333333 L13.7083333,10.525 C13.7333333,10.3583333 13.75,10.1833333 13.75,10 Z M15.8333333,10 C15.8333333,10.7833333 15.6666667,11.5166667 15.3833333,12.2 L16.6416667,13.4583333 C17.1916667,12.425 17.5,11.25 17.5,10 C17.5,6.43333333 15.0083333,3.45 11.6666667,2.69166667 L11.6666667,4.40833333 C14.075,5.125 15.8333333,7.35833333 15.8333333,10 Z M3.55833333,2.5 L2.5,3.55833333 L6.44166667,7.5 L2.5,7.5 L2.5,12.5 L5.83333333,12.5 L10,16.6666667 L10,11.0583333 L13.5416667,14.6 C12.9833333,15.0333333 12.3583333,15.375 11.6666667,15.5833333 L11.6666667,17.3 C12.8166667,17.0416667 13.8583333,16.5083333 14.7416667,15.7916667 L16.4416667,17.5 L17.5,16.4416667 L10,8.94166667 L3.55833333,2.5 Z M10,3.33333333 L8.25833333,5.075 L10,6.81666667 L10,3.33333333 Z',
               })
             )
           )
@@ -1732,7 +1751,7 @@ var Unmute = function (_ref) {
       {
         width: '16px',
         height: '16px',
-        viewBox: '0 0 16 16'
+        viewBox: '0 0 16 16',
       },
       props
     ),
@@ -1742,23 +1761,22 @@ var Unmute = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
           transform: 'translate(-854.000000, -325.000000)',
           fill: '#FFFFFF',
-          fillRule: 'nonzero'
+          fillRule: 'nonzero',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(830.000000, 207.000000)'
+            transform: 'translate(830.000000, 207.000000)',
           },
           React__default.createElement('path', {
-            d:
-              'M24.5,123.5 L24.5,128.5 L27.8333333,128.5 L32,132.666667 L32,119.333333 L27.8333333,123.5 L24.5,123.5 Z M35.75,126 C35.75,124.525 34.9,123.258333 33.6666667,122.641667 L33.6666667,129.35 C34.9,128.741667 35.75,127.475 35.75,126 Z M33.6666667,118.691667 L33.6666667,120.408333 C36.075,121.125 37.8333333,123.358333 37.8333333,126 C37.8333333,128.641667 36.075,130.875 33.6666667,131.591667 L33.6666667,133.308333 C37.0083333,132.55 39.5,129.566667 39.5,126 C39.5,122.433333 37.0083333,119.45 33.6666667,118.691667 Z'
+            d: 'M24.5,123.5 L24.5,128.5 L27.8333333,128.5 L32,132.666667 L32,119.333333 L27.8333333,123.5 L24.5,123.5 Z M35.75,126 C35.75,124.525 34.9,123.258333 33.6666667,122.641667 L33.6666667,129.35 C34.9,128.741667 35.75,127.475 35.75,126 Z M33.6666667,118.691667 L33.6666667,120.408333 C36.075,121.125 37.8333333,123.358333 37.8333333,126 C37.8333333,128.641667 36.075,130.875 33.6666667,131.591667 L33.6666667,133.308333 C37.0083333,132.55 39.5,129.566667 39.5,126 C39.5,122.433333 37.0083333,119.45 33.6666667,118.691667 Z',
           })
         )
       )
@@ -1780,7 +1798,7 @@ var RadioOff = function (_ref) {
       {
         width: '16px',
         height: '16px',
-        viewBox: '0 0 16 16'
+        viewBox: '0 0 16 16',
       },
       props
     ),
@@ -1790,17 +1808,17 @@ var RadioOff = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
-          transform: 'translate(-861.000000, -656.000000)'
+          transform: 'translate(-861.000000, -656.000000)',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(861.000000, 656.000000)'
+            transform: 'translate(861.000000, 656.000000)',
           },
           React__default.createElement(
             'g',
@@ -1812,8 +1830,8 @@ var RadioOff = function (_ref) {
               cy: '8',
               r: '7.5',
               style: {
-                fill: 'none'
-              }
+                fill: 'none',
+              },
             })
           )
         )
@@ -1837,7 +1855,7 @@ var RadioOn = function (_ref) {
         width: '16px',
         height: '16px',
         viewBox: '0 0 16 16',
-        version: '1.1'
+        version: '1.1',
       },
       props
     ),
@@ -1847,17 +1865,17 @@ var RadioOn = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
-          transform: 'translate(-861.000000, -626.000000)'
+          transform: 'translate(-861.000000, -626.000000)',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(861.000000, 626.000000)'
+            transform: 'translate(861.000000, 626.000000)',
           },
           React__default.createElement(
             'g',
@@ -1869,15 +1887,15 @@ var RadioOn = function (_ref) {
               cy: '8',
               r: '7.5',
               style: {
-                fill: 'none'
-              }
+                fill: 'none',
+              },
             })
           ),
           React__default.createElement('circle', {
             fill: '#4384F5',
             cx: '8',
             cy: '8',
-            r: '3'
+            r: '3',
           })
         )
       )
@@ -1899,7 +1917,7 @@ var RateBad = function (_ref) {
       {
         width: '14px',
         height: '19px',
-        viewBox: '0 0 14 19'
+        viewBox: '0 0 14 19',
       },
       props
     ),
@@ -1909,25 +1927,24 @@ var RateBad = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
           transform: 'translate(-1092.000000, -247.000000)',
           fill: '#424D57',
-          fillRule: 'nonzero'
+          fillRule: 'nonzero',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(832.000000, 237.000000)'
+            transform: 'translate(832.000000, 237.000000)',
           },
           React__default.createElement('path', {
-            d:
-              'M262.011431,10.0079649 C264.301872,10.0254688 266.149331,11.871012 266.149331,14.141574 L266.149331,15.006151 C266.149331,15.7362453 266.746389,16.3281036 267.482897,16.3281036 L270.483677,16.3281036 C270.679987,16.3281036 270.875953,16.3444026 271.069519,16.3768295 C272.984075,16.6975635 274.27384,18.4961084 273.950288,20.3939919 L273.161331,25.0218442 C272.786728,27.2191809 270.866945,28.8276198 268.618875,28.8276198 L265.455497,28.8276198 C262.442509,28.8276198 260,26.406381 260,23.4196316 L260,12.0040832 C260,10.9016253 260.893719,10.0079066 261.996177,10.0079066 C262.001262,10.0079066 262.006347,10.007926 262.011431,10.0079649 Z M268.206897,24.4827922 L272.086361,24.4827922 L272.086361,25.4442124 L269.168317,25.4442124 C268.637339,25.4442124 268.206897,25.0137699 268.206897,24.4827922 Z M268.206897,22.0689991 L273.056228,22.0689991 L273.056228,23.0304193 L269.168317,23.0304193 C268.637339,23.0304193 268.206897,22.5999768 268.206897,22.0689991 Z M268.206897,19.655206 L273.541161,19.655206 L273.541161,20.6166262 L269.168317,20.6166262 C268.637339,20.6166262 268.206897,20.1861837 268.206897,19.655206 Z M261.939732,23.4196316 C261.939732,25.3444256 263.513794,26.9047795 265.455497,26.9047795 L268.618875,26.9047795 C269.920389,26.9047795 271.031842,25.9735781 271.248717,24.7014358 L272.037675,20.0735835 C272.182715,19.2228081 271.604545,18.4165638 270.746296,18.2727865 C270.659525,18.2582503 270.571678,18.2509439 270.483677,18.2509439 L267.482897,18.2509439 C265.675104,18.2509439 264.209598,16.7982006 264.209598,15.006151 L264.209598,14.141574 C264.209598,12.9271831 263.221501,11.9401098 261.996478,11.930748 L261.939732,11.9303143 L261.939732,23.4196316 Z',
+            d: 'M262.011431,10.0079649 C264.301872,10.0254688 266.149331,11.871012 266.149331,14.141574 L266.149331,15.006151 C266.149331,15.7362453 266.746389,16.3281036 267.482897,16.3281036 L270.483677,16.3281036 C270.679987,16.3281036 270.875953,16.3444026 271.069519,16.3768295 C272.984075,16.6975635 274.27384,18.4961084 273.950288,20.3939919 L273.161331,25.0218442 C272.786728,27.2191809 270.866945,28.8276198 268.618875,28.8276198 L265.455497,28.8276198 C262.442509,28.8276198 260,26.406381 260,23.4196316 L260,12.0040832 C260,10.9016253 260.893719,10.0079066 261.996177,10.0079066 C262.001262,10.0079066 262.006347,10.007926 262.011431,10.0079649 Z M268.206897,24.4827922 L272.086361,24.4827922 L272.086361,25.4442124 L269.168317,25.4442124 C268.637339,25.4442124 268.206897,25.0137699 268.206897,24.4827922 Z M268.206897,22.0689991 L273.056228,22.0689991 L273.056228,23.0304193 L269.168317,23.0304193 C268.637339,23.0304193 268.206897,22.5999768 268.206897,22.0689991 Z M268.206897,19.655206 L273.541161,19.655206 L273.541161,20.6166262 L269.168317,20.6166262 C268.637339,20.6166262 268.206897,20.1861837 268.206897,19.655206 Z M261.939732,23.4196316 C261.939732,25.3444256 263.513794,26.9047795 265.455497,26.9047795 L268.618875,26.9047795 C269.920389,26.9047795 271.031842,25.9735781 271.248717,24.7014358 L272.037675,20.0735835 C272.182715,19.2228081 271.604545,18.4165638 270.746296,18.2727865 C270.659525,18.2582503 270.571678,18.2509439 270.483677,18.2509439 L267.482897,18.2509439 C265.675104,18.2509439 264.209598,16.7982006 264.209598,15.006151 L264.209598,14.141574 C264.209598,12.9271831 263.221501,11.9401098 261.996478,11.930748 L261.939732,11.9303143 L261.939732,23.4196316 Z',
             transform:
-              'translate(267.000000, 19.413810) scale(-1, -1) translate(-267.000000, -19.413810) '
+              'translate(267.000000, 19.413810) scale(-1, -1) translate(-267.000000, -19.413810) ',
           })
         )
       )
@@ -1949,7 +1966,7 @@ var RateGood = function (_ref) {
       {
         width: '14px',
         height: '19px',
-        viewBox: '0 0 14 19'
+        viewBox: '0 0 14 19',
       },
       props
     ),
@@ -1959,23 +1976,22 @@ var RateGood = function (_ref) {
         stroke: 'none',
         strokeWidth: '1',
         fill: 'none',
-        fillRule: 'evenodd'
+        fillRule: 'evenodd',
       },
       React__default.createElement(
         'g',
         {
           transform: 'translate(-1047.000000, -247.000000)',
           fill: '#424D57',
-          fillRule: 'nonzero'
+          fillRule: 'nonzero',
         },
         React__default.createElement(
           'g',
           {
-            transform: 'translate(832.000000, 237.000000)'
+            transform: 'translate(832.000000, 237.000000)',
           },
           React__default.createElement('path', {
-            d:
-              'M217.011431,10.0079649 C219.301872,10.0254688 221.149331,11.871012 221.149331,14.141574 L221.149331,15.006151 C221.149331,15.7362453 221.746389,16.3281036 222.482897,16.3281036 L225.483677,16.3281036 C225.679987,16.3281036 225.875953,16.3444026 226.069519,16.3768295 C227.984075,16.6975635 229.27384,18.4961084 228.950288,20.3939919 L228.161331,25.0218442 C227.786728,27.2191809 225.866945,28.8276198 223.618875,28.8276198 L220.455497,28.8276198 C217.442509,28.8276198 215,26.406381 215,23.4196316 L215,12.0040832 C215,10.9016253 215.893719,10.0079066 216.996177,10.0079066 C217.001262,10.0079066 217.006347,10.007926 217.011431,10.0079649 Z M223.206897,24.4827922 L227.086361,24.4827922 L227.086361,25.4442124 L224.168317,25.4442124 C223.637339,25.4442124 223.206897,25.0137699 223.206897,24.4827922 Z M223.206897,22.0689991 L228.056228,22.0689991 L228.056228,23.0304193 L224.168317,23.0304193 C223.637339,23.0304193 223.206897,22.5999768 223.206897,22.0689991 Z M223.206897,19.655206 L228.541161,19.655206 L228.541161,20.6166262 L224.168317,20.6166262 C223.637339,20.6166262 223.206897,20.1861837 223.206897,19.655206 Z M216.939732,23.4196316 C216.939732,25.3444256 218.513794,26.9047795 220.455497,26.9047795 L223.618875,26.9047795 C224.920389,26.9047795 226.031842,25.9735781 226.248717,24.7014358 L227.037675,20.0735835 C227.182715,19.2228081 226.604545,18.4165638 225.746296,18.2727865 C225.659525,18.2582503 225.571678,18.2509439 225.483677,18.2509439 L222.482897,18.2509439 C220.675104,18.2509439 219.209598,16.7982006 219.209598,15.006151 L219.209598,14.141574 C219.209598,12.9271831 218.221501,11.9401098 216.996478,11.930748 L216.939732,11.9303143 L216.939732,23.4196316 Z'
+            d: 'M217.011431,10.0079649 C219.301872,10.0254688 221.149331,11.871012 221.149331,14.141574 L221.149331,15.006151 C221.149331,15.7362453 221.746389,16.3281036 222.482897,16.3281036 L225.483677,16.3281036 C225.679987,16.3281036 225.875953,16.3444026 226.069519,16.3768295 C227.984075,16.6975635 229.27384,18.4961084 228.950288,20.3939919 L228.161331,25.0218442 C227.786728,27.2191809 225.866945,28.8276198 223.618875,28.8276198 L220.455497,28.8276198 C217.442509,28.8276198 215,26.406381 215,23.4196316 L215,12.0040832 C215,10.9016253 215.893719,10.0079066 216.996177,10.0079066 C217.001262,10.0079066 217.006347,10.007926 217.011431,10.0079649 Z M223.206897,24.4827922 L227.086361,24.4827922 L227.086361,25.4442124 L224.168317,25.4442124 C223.637339,25.4442124 223.206897,25.0137699 223.206897,24.4827922 Z M223.206897,22.0689991 L228.056228,22.0689991 L228.056228,23.0304193 L224.168317,23.0304193 C223.637339,23.0304193 223.206897,22.5999768 223.206897,22.0689991 Z M223.206897,19.655206 L228.541161,19.655206 L228.541161,20.6166262 L224.168317,20.6166262 C223.637339,20.6166262 223.206897,20.1861837 223.206897,19.655206 Z M216.939732,23.4196316 C216.939732,25.3444256 218.513794,26.9047795 220.455497,26.9047795 L223.618875,26.9047795 C224.920389,26.9047795 226.031842,25.9735781 226.248717,24.7014358 L227.037675,20.0735835 C227.182715,19.2228081 226.604545,18.4165638 225.746296,18.2727865 C225.659525,18.2582503 225.571678,18.2509439 225.483677,18.2509439 L222.482897,18.2509439 C220.675104,18.2509439 219.209598,16.7982006 219.209598,15.006151 L219.209598,14.141574 C219.209598,12.9271831 218.221501,11.9401098 216.996478,11.930748 L216.939732,11.9303143 L216.939732,23.4196316 Z',
           })
         )
       )
@@ -1997,7 +2013,7 @@ var Send = function (_ref) {
       {
         height: '18px',
         viewBox: '0 0 21 18',
-        width: '21px'
+        width: '21px',
       },
       props
     ),
@@ -2007,15 +2023,15 @@ var Send = function (_ref) {
         fill: 'none',
         fillRule: 'evenodd',
         stroke: 'none',
-        strokeWidth: '1'
+        strokeWidth: '1',
       },
       React__default.createElement(
         'g',
         {
-          fill: '#000000'
+          fill: '#000000',
         },
         React__default.createElement('polygon', {
-          points: '0.01 18 21 9 0.01 0 0 7 15 9 0 11'
+          points: '0.01 18 21 9 0.01 0 0 7 15 9 0 11',
         })
       )
     )
@@ -2036,13 +2052,12 @@ var Search = function (_ref) {
       {
         width: '28px',
         height: '28px',
-        viewBox: '0 0 512 512'
+        viewBox: '0 0 512 512',
       },
       props
     ),
     React__default.createElement('path', {
-      d:
-        'M508.5 481.6l-129-129c-2.3-2.3-5.3-3.5-8.5-3.5h-10.3C395 312 416 262.5 416 208 416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c54.5 0 104-21 141.1-55.2V371c0 3.2 1.3 6.2 3.5 8.5l129 129c4.7 4.7 12.3 4.7 17 0l9.9-9.9c4.7-4.7 4.7-12.3 0-17zM208 384c-97.3 0-176-78.7-176-176S110.7 32 208 32s176 78.7 176 176-78.7 176-176 176z'
+      d: 'M508.5 481.6l-129-129c-2.3-2.3-5.3-3.5-8.5-3.5h-10.3C395 312 416 262.5 416 208 416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c54.5 0 104-21 141.1-55.2V371c0 3.2 1.3 6.2 3.5 8.5l129 129c4.7 4.7 12.3 4.7 17 0l9.9-9.9c4.7-4.7 4.7-12.3 0-17zM208 384c-97.3 0-176-78.7-176-176S110.7 32 208 32s176 78.7 176 176-78.7 176-176 176z',
     })
   )
 }
@@ -2074,7 +2089,7 @@ var mapPropsToStyles$3 = function mapPropsToStyles(props) {
   }
 
   return _extends({}, propsStyle, {
-    '& img': imageStyle
+    '& img': imageStyle,
   })
 }
 
@@ -2094,7 +2109,7 @@ var StyledAvatar =
   styled$1('div', {
     displayName: 'Avatar',
     mapPropsToStyles: mapPropsToStyles$3,
-    target: 'e11ezd0e0'
+    target: 'e11ezd0e0',
   })(
     'border:1px solid #fff;border-radius:50%;text-align:center;background-color:#fff;text-transform:uppercase;overflow:hidden;'
   )
@@ -2111,7 +2126,7 @@ var Avatar = function Avatar(props) {
 
   if (imageStatus === 'failed') {
     child = createElement(PersonIcon, {
-      className: imageStyle
+      className: imageStyle,
     })
   } else if (imgUrl) {
     child = createElement('img', {
@@ -2122,7 +2137,7 @@ var Avatar = function Avatar(props) {
       },
       onError: function onError() {
         return setImageStatus('failed')
-      }
+      },
     })
   } else if (letter) {
     child = createElement('span', null, letter)
@@ -2144,7 +2159,7 @@ Avatar.propTypes = {
   size: string,
 
   /** Override component's styles */
-  style: shape()
+  style: shape(),
 }
 
 var forwardBorderRadiuses =
@@ -2181,7 +2196,7 @@ var flipBorderRadiusesHorizontally = function flipBorderRadiusesHorizontally(
     borderTopLeftRadius: borderTopRightRadius,
     borderTopRightRadius: borderTopLeftRadius,
     borderBottomRightRadius: borderBottomLeftRadius,
-    borderBottomLeftRadius: borderBottomRightRadius
+    borderBottomLeftRadius: borderBottomRightRadius,
   }
 }
 
@@ -2200,7 +2215,7 @@ var mapPropsToStyles$4 = function mapPropsToStyles(props) {
     borderBottomLeftRadius:
       radiusType === 'single' || radiusType === 'last'
         ? ovalBorderRadius
-        : sharpBorderRadius
+        : sharpBorderRadius,
   } // TODO maybe this could be reversed somehow in theme?
   // return isOwn ? flipBorderRadiusesHorizontally(borderRadiuses) : borderRadiuses
 
@@ -2218,7 +2233,7 @@ var StyledBubble =
       displayName: displayName,
       shouldForwardProp: isPropValid,
       mapPropsToStyles: mapPropsToStyles$4,
-      target: 'emwkn670'
+      target: 'emwkn670',
     }
   )(
     forwardBorderRadiuses,
@@ -2232,18 +2247,18 @@ StyledBubble.propTypes = {
   isOwn: bool,
 
   /** Specifies rendering type, it's used for appropriate corners' rounding */
-  radiusType: oneOf(['single', 'first', 'last'])
+  radiusType: oneOf(['single', 'first', 'last']),
 }
 
 var StyledColumn =
   /*#__PURE__*/
   styled$1('div', {
-    target: 'ek650k30'
+    target: 'ek650k30',
   })('display:flex;flex-direction:column;min-width:0;')
 
 var mapPropsToStyles$5 = function mapPropsToStyles(props) {
   return {
-    flexShrink: props.shrink ? 1 : 0
+    flexShrink: props.shrink ? 1 : 0,
   }
 }
 
@@ -2251,7 +2266,7 @@ var StyledFill =
   /*#__PURE__*/
   styled$1('div', {
     mapPropsToStyles: mapPropsToStyles$5,
-    target: 'e1jdwequ0'
+    target: 'e1jdwequ0',
   })()
 
 var Fill = function Fill(props) {
@@ -2259,7 +2274,7 @@ var Fill = function Fill(props) {
     StyledFill,
     _extends(
       {
-        flexFill: true
+        flexFill: true,
       },
       props
     )
@@ -2267,15 +2282,15 @@ var Fill = function Fill(props) {
 }
 
 Fill.defaultProps = {
-  shrink: true
+  shrink: true,
 }
 Fill.propTypes = {
-  shrink: bool
+  shrink: bool,
 }
 
 var mapPropsToStyles$6 = function mapPropsToStyles(props) {
   return {
-    flexShrink: props.shrink ? 1 : 0
+    flexShrink: props.shrink ? 1 : 0,
   }
 }
 
@@ -2283,7 +2298,7 @@ var StyledFit =
   /*#__PURE__*/
   styled$1('div', {
     mapPropsToStyles: mapPropsToStyles$6,
-    target: 'e1yi1p4d0'
+    target: 'e1yi1p4d0',
   })()
 
 var Fit = function Fit(props) {
@@ -2291,7 +2306,7 @@ var Fit = function Fit(props) {
     StyledFit,
     _extends(
       {
-        flexFit: true
+        flexFit: true,
       },
       props
     )
@@ -2299,10 +2314,10 @@ var Fit = function Fit(props) {
 }
 
 Fit.defaultProps = {
-  shrink: true
+  shrink: true,
 }
 Fit.propTypes = {
-  shrink: bool
+  shrink: bool,
 }
 
 var StyledButton =
@@ -2310,7 +2325,7 @@ var StyledButton =
   styled$1('button', {
     displayName: 'IconButton',
     section: true,
-    target: 'e1m5b1js0'
+    target: 'e1m5b1js0',
   })(
     'appearance:none;background:transparent;border:0;display:inline-block;margin:0;padding:0.5em;color:inherit;&:hover{cursor:',
     function (props) {
@@ -2323,7 +2338,7 @@ StyledButton.propTypes = {
   disabled: bool,
   children: node.isRequired,
   color: string,
-  onClick: func
+  onClick: func,
 }
 
 var _React$createContext = createContext({
@@ -2331,7 +2346,7 @@ var _React$createContext = createContext({
     isScrollOnTop: noop,
     registerUnseenListItem: noop,
     scrollToBottom: noop,
-    scrollToTop: noop
+    scrollToTop: noop,
   }),
   MessageListProvider = _React$createContext.Provider,
   MessageListSpy = _React$createContext.Consumer
@@ -2352,7 +2367,7 @@ var StyledList$1 =
   /*#__PURE__*/
   styled$1('div', {
     displayName: 'MessageList',
-    target: 'e1i3n9g60'
+    target: 'e1i3n9g60',
   })('padding:0.5em;overflow-y:auto;height:100%;')
 
 var MessageList =
@@ -2381,7 +2396,7 @@ var MessageList =
 
         _this._listItems.push(
           _extends({}, listItemDescription, {
-            id: id
+            id: id,
           })
         )
 
@@ -2422,7 +2437,7 @@ var MessageList =
         isScrollOnTop: _this.props.isScrollOnTop,
         registerUnseenListItem: _this._registerUnseenListItem,
         scrollToBottom: _this.props.scrollToBottom,
-        scrollToTop: _this.props.scrollToTop
+        scrollToTop: _this.props.scrollToTop,
       }
       return _this
     }
@@ -2457,13 +2472,13 @@ var MessageList =
       return createElement(
         MessageListProvider,
         {
-          value: this._context
+          value: this._context,
         },
         createElement(
           StyledList$1,
           _extends({}, this.props, {
             innerRef: this._getListRef,
-            onScroll: this._handleScroll
+            onScroll: this._handleScroll,
           })
         )
       )
@@ -2483,12 +2498,12 @@ MessageList.propTypes = {
   innerRef: func,
 
   /** Callback hooked into list's scroll event */
-  onScroll: func
+  onScroll: func,
 }
 MessageList.defaultProps = {
   active: true,
   innerRef: noop,
-  onScroll: noop
+  onScroll: noop,
 }
 var MessageList$1 = withPinnedScroll()(MessageList)
 
@@ -2523,7 +2538,7 @@ var MessageListItem =
 
           _this._unregisterFromMessageList = register({
             ref: ref,
-            onSeen: _this.props.onSeen
+            onSeen: _this.props.onSeen,
           })
         }
       })
@@ -2546,7 +2561,7 @@ var MessageListItem =
           {
             ref: _this2.props.seen
               ? null
-              : _this2._registerInMessageList(registerUnseenListItem)
+              : _this2._registerInMessageList(registerUnseenListItem),
           },
           Children.only(_this2.props.children)
         )
@@ -2558,10 +2573,10 @@ var MessageListItem =
 
 MessageListItem.propTypes = {
   children: node.isRequired,
-  onSeen: func
+  onSeen: func,
 }
 MessageListItem.defaultProps = {
-  onSeen: noop
+  onSeen: noop,
 }
 
 var fade =
@@ -2578,14 +2593,14 @@ var Fade = function Fade(_ref) {
     CSSTransition,
     _extends({}, props, {
       classNames: fade,
-      timeout: 200
+      timeout: 200,
     }),
     children
   )
 }
 
 Fade.propTypes = {
-  children: node
+  children: node,
 }
 
 var mapPropsToStyles$7 = function mapPropsToStyles(_ref) {
@@ -2596,7 +2611,7 @@ var mapPropsToStyles$7 = function mapPropsToStyles(_ref) {
   }
 
   return {
-    flexDirection: horizontalAlign === 'left' ? 'row' : 'row-reverse'
+    flexDirection: horizontalAlign === 'left' ? 'row' : 'row-reverse',
   }
 } // TODO: check out if this element should be flex, seems it might be some leftover, need to check all browsers
 
@@ -2606,7 +2621,7 @@ var StyledMessage =
     displayName: 'Message',
     mapPropsToStyles: mapPropsToStyles$7,
     section: true,
-    target: 'e10ccb470'
+    target: 'e10ccb470',
   })(
     'display:flex;align-items:flex-start;font-size:0.9em;margin:0.3em;max-width:100%;'
   )
@@ -2614,19 +2629,19 @@ var AuthorName =
   /*#__PURE__*/
   styled$1('span', {
     displayName: 'AuthorName',
-    target: 'e10ccb471'
+    target: 'e10ccb471',
   })('font-size:0.8em;')
 var MessageMeta =
   /*#__PURE__*/
   styled$1('div', {
     displayName: 'MessageMeta',
-    target: 'e10ccb472'
+    target: 'e10ccb472',
   })('text-align:left;')
 var Content =
   /*#__PURE__*/
   styled$1('div', {
     displayName: 'Content',
-    target: 'e10ccb473'
+    target: 'e10ccb473',
   })(
     'display:flex;flex-direction:column;overflow:hidden;align-items:flex-start;'
   )
@@ -2634,13 +2649,13 @@ var Time =
   /*#__PURE__*/
   styled$1('span', {
     displayName: 'Time',
-    target: 'e10ccb474'
+    target: 'e10ccb474',
   })('font-size:0.8em;')
 var Status =
   /*#__PURE__*/
   styled$1('div', {
     displayName: 'Status',
-    target: 'e10ccb475'
+    target: 'e10ccb475',
   })('text-align:right;font-size:0.8em;')
 
 var Message =
@@ -2674,7 +2689,7 @@ var Message =
           'showMetaOnClick',
           'onSeen',
           'radiusType',
-          'seen'
+          'seen',
         ])
 
       var message = createElement(Toggle, null, function (_ref2) {
@@ -2684,7 +2699,7 @@ var Message =
           StyledMessage,
           _extends({}, getElementTogglerProps(props), {
             own: isOwn,
-            tabIndex: null
+            tabIndex: null,
           }),
           createElement(
             Content,
@@ -2693,17 +2708,17 @@ var Message =
               TransitionGroup,
               null,
               (!showMetaOnClick || authorOpened) &&
-              createElement(
-                Fade,
-                null,
                 createElement(
-                  MessageMeta,
+                  Fade,
                   null,
-                  authorName &&
-                  createElement(AuthorName, null, authorName, ' '),
-                  date && createElement(Time, null, date)
+                  createElement(
+                    MessageMeta,
+                    null,
+                    authorName &&
+                      createElement(AuthorName, null, authorName, ' '),
+                    date && createElement(Time, null, date)
+                  )
                 )
-              )
             ),
             children,
             deliveryStatus && createElement(Status, null, deliveryStatus)
@@ -2714,7 +2729,7 @@ var Message =
         MessageListItem,
         {
           onSeen: onSeen,
-          seen: seen
+          seen: seen,
         },
         message
       )
@@ -2749,32 +2764,31 @@ Message.propTypes = {
 
   /** Specifies rendering type, it's used for appropriate corners' rounding */
   radiusType: oneOf(['single', 'first', 'last']),
-  seen: bool
+  seen: bool,
 }
 Message.defaultProps = {
-  onClick: function onClick() {
-  },
-  seen: false
+  onClick: function onClick() {},
+  seen: false,
 }
 
 var SubTitle =
   /*#__PURE__*/
   styled$1('div', {
     displayName: 'SubTitle',
-    target: 'e1fut3qs0'
+    target: 'e1fut3qs0',
   })('font-weight:300;opacity:0.7;')
 SubTitle.defaultProps = {
-  textWrap: true
+  textWrap: true,
 }
 
 var Title =
   /*#__PURE__*/
   styled$1('div', {
     displayName: 'Title',
-    target: 'e9xf8br0'
+    target: 'e9xf8br0',
   })('font-weight:500;')
 Title.defaultProps = {
-  textWrap: true
+  textWrap: true,
 }
 
 var warnOnce = once(console.warn.bind(console))
@@ -2782,7 +2796,7 @@ var StyledTitle =
   /*#__PURE__*/
   styled$1('div', {
     displayName: 'MessageTitle',
-    target: 'e1ykjxgu0'
+    target: 'e1ykjxgu0',
   })('font-weight:600;padding:1em;')
 var marginBottomClass =
   /*#__PURE__*/
@@ -2795,7 +2809,7 @@ var MessageTitle = function MessageTitle(_ref) {
     props = _objectWithoutPropertiesLoose(_ref, [
       'children',
       'title',
-      'subtitle'
+      'subtitle',
     ])
 
   if (
@@ -2807,7 +2821,7 @@ var MessageTitle = function MessageTitle(_ref) {
     warnOnce(
       [
         'You should not use title nor subtitle & children props together.',
-        'They cannot be rendered at once - children prop has higher rendering priority.'
+        'They cannot be rendered at once - children prop has higher rendering priority.',
       ].join('\n')
     )
   }
@@ -2815,39 +2829,39 @@ var MessageTitle = function MessageTitle(_ref) {
   var childs = children
     ? children
     : [
-      title &&
-      createElement(
-        Title,
-        {
-          key: 'title',
-          className: marginBottomClass
-        },
-        title
-      ),
-      subtitle &&
-      createElement(
-        SubTitle,
-        {
-          key: 'subtitle',
-          preserveLines: true
-        },
-        subtitle
-      )
-    ]
+        title &&
+          createElement(
+            Title,
+            {
+              key: 'title',
+              className: marginBottomClass,
+            },
+            title
+          ),
+        subtitle &&
+          createElement(
+            SubTitle,
+            {
+              key: 'subtitle',
+              preserveLines: true,
+            },
+            subtitle
+          ),
+      ]
   return createElement(StyledTitle, props, childs)
 }
 
 MessageTitle.propTypes = {
   children: oneOfType([arrayOf(node), node]),
   subtitle: string,
-  title: string
+  title: string,
 }
 
 var StyledText =
   /*#__PURE__*/
   styled$1('div', {
     displayName: 'MessageText',
-    target: 'eovu8nx0'
+    target: 'eovu8nx0',
   })(
     'white-space:pre-line;word-wrap:break-word;overflow-wrap:break-word;max-width:100%;padding:1em;'
   )
@@ -2864,8 +2878,8 @@ var mapPropsToStyles$8 = function mapPropsToStyles(props) {
       borderTopLeftRadius: borderTopLeftRadius,
       borderTopRightRadius: borderTopRightRadius,
       borderBottomRightRadius: borderBottomRightRadius,
-      borderBottomLeftRadius: borderBottomLeftRadius
-    }
+      borderBottomLeftRadius: borderBottomLeftRadius,
+    },
   }
 }
 
@@ -2874,7 +2888,7 @@ var StyledMedia =
   styled$1('div', {
     displayName: 'MessageMedia',
     mapPropsToStyles: mapPropsToStyles$8,
-    target: 'evmhqt80'
+    target: 'evmhqt80',
   })('overflow:hidden;')
 
 var borderColor = 'rgba(0, 0, 0, 0.1)'
@@ -2883,7 +2897,7 @@ var StyledButtons =
   /*#__PURE__*/
   styled$1('div', {
     displayName: 'MessageButtons',
-    target: 'edowbh60'
+    target: 'edowbh60',
   })(
     forwardBorderRadiuses,
     ';& >:first-child{border-top:',
@@ -2906,8 +2920,8 @@ var mapPropsToStyles$9 = function mapPropsToStyles(props) {
     color: color,
     ':hover': {
       color: darkerColor,
-      borderColor: darkerColor
-    }
+      borderColor: darkerColor,
+    },
   }
 }
 
@@ -2927,7 +2941,7 @@ var StyledButton$1 =
         _extends(
           {
             href: href,
-            rel: 'nofollow noopener'
+            rel: 'nofollow noopener',
           },
           props
         )
@@ -2937,7 +2951,7 @@ var StyledButton$1 =
       displayName: 'Button',
       mapPropsToStyles: mapPropsToStyles$9,
       shouldForwardProp: isPropValid,
-      target: 'e1972fzd0'
+      target: 'e1972fzd0',
     }
   )(
     'border-width:1px;border-style:solid;background-color:#fff;font-size:1em;font-family:inherit;text-align:center;text-decoration:none;appearance:none;padding:0.8em;transition:box-shadow 0.1s,color 0.1s,border-color 0.2s;&:hover{cursor:pointer;}&:active{box-shadow:none;outline:none;}&:focus{box-shadow:none;outline:none;}&[disabled]{pointer-events:none;}'
@@ -2952,13 +2966,13 @@ var Button = function Button(_ref2) {
 
 Button.propTypes = {
   /** Button's label */
-  label: string
+  label: string,
 }
 
 var StyledButton$2 =
   /*#__PURE__*/
   styled$1(Button, {
-    target: 'e121y1dq0'
+    target: 'e121y1dq0',
   })(
     'display:inline-block;width:100%;border-left:0;border-right:0;border-top:0;border-bottom-color:rgba(0,0,0,0.1);box-shadow:none;transition:background-color 0.1s;background:transparent;color:',
     function (props) {
@@ -3002,7 +3016,7 @@ var MessageButton =
       return createElement(
         StyledButton$2,
         _extends({}, this.props, {
-          onClick: this.handleClick
+          onClick: this.handleClick,
         })
       )
     }
@@ -3019,10 +3033,10 @@ MessageButton.propTypes = {
   primary: bool,
 
   /** Button's value */
-  value: oneOfType([string, number])
+  value: oneOfType([string, number]),
 }
 MessageButton.defaultProps = {
-  onClick: noop
+  onClick: noop,
 }
 
 var compactChildren = function compactChildren(children) {
@@ -3037,23 +3051,23 @@ var hasControlledProps = function hasControlledProps(controlledList, ownProps) {
 }
 
 var SINGLE = {
-  radiusType: 'single'
+  radiusType: 'single',
 }
 var FIRST = {
-  radiusType: 'first'
+  radiusType: 'first',
 }
 var LAST = {
-  radiusType: 'last'
+  radiusType: 'last',
 }
 var hideMetaProps = {
   authorName: null,
-  date: null
+  date: null,
 }
 
 var mapPropsToStyles$a = function mapPropsToStyles(props) {
   if (props.isOwn) {
     return {
-      flexDirection: 'row-reverse'
+      flexDirection: 'row-reverse',
     }
   }
 
@@ -3065,18 +3079,18 @@ var StyledGroup =
   styled$1('div', {
     displayName: 'MessageGroup',
     mapPropsToStyles: mapPropsToStyles$a,
-    target: 'eslhdd60'
+    target: 'eslhdd60',
   })('display:flex;margin-bottom:1em;')
 var AvatarWrapper =
   /*#__PURE__*/
   styled$1('div', {
-    target: 'eslhdd61'
+    target: 'eslhdd61',
   })(
     'display:flex;flex-direction:column;align-items:center;text-align:center;font-size:0.7em;line-height:1.6em;',
     function (props) {
       return {
         minWidth: props.theme.Avatar.size,
-        margin: props.isOwn ? '0 0 0 .3em' : '0 .3em 0 0'
+        margin: props.isOwn ? '0 0 0 .3em' : '0 .3em 0 0',
       }
     },
     ';'
@@ -3094,7 +3108,7 @@ var MessageGroup = function MessageGroup(_ref) {
       'avatar',
       'avatarLetter',
       'children',
-      'onlyFirstWithMeta'
+      'onlyFirstWithMeta',
     ])
 
   var compactedChildren = compactChildren(children)
@@ -3103,21 +3117,21 @@ var MessageGroup = function MessageGroup(_ref) {
     StyledGroup,
     props,
     (avatar || avatarLetter) &&
-    createElement(
-      AvatarWrapper,
-      {
-        flexFit: true,
-        isOwn: props.isOwn
-      },
-      createElement(Avatar, {
-        imgUrl: avatar,
-        letter: avatarLetter
-      })
-    ),
+      createElement(
+        AvatarWrapper,
+        {
+          flexFit: true,
+          isOwn: props.isOwn,
+        },
+        createElement(Avatar, {
+          imgUrl: avatar,
+          letter: avatarLetter,
+        })
+      ),
     createElement(
       Fill,
       {
-        className: messageGropContainerStyle
+        className: messageGropContainerStyle,
       },
       Children.map(compactedChildren, function (child, index) {
         if (childrenCount === 1) {
@@ -3155,78 +3169,78 @@ MessageGroup.propTypes = {
 
   /** Message author - agent (left side) or visitor (right side) */
   isOwn: bool,
-  onlyFirstWithMeta: bool
+  onlyFirstWithMeta: bool,
 }
 
 var darkTheme = {
   vars: {
     'primary-color': '#0d449b',
     'secondary-color': '#3a3a3a',
-    'tertiary-color': 'rgba(0, 0, 0, 0.8)'
+    'tertiary-color': 'rgba(0, 0, 0, 0.8)',
   },
   AgentBar: {
     css: {
-      color: '#fff'
+      color: '#fff',
     },
     IconButton: {
       css: {
         background: 'rgba(0, 0, 0, 0.2)',
         borderRadius: '50%',
         padding: '1em',
-        margin: '.3em'
-      }
+        margin: '.3em',
+      },
     },
     Icon: {
       css: {
-        transform: 'scale(0.7)'
-      }
-    }
+        transform: 'scale(0.7)',
+      },
+    },
   },
   Bubble: {
     css: {
-      color: '#fff'
-    }
+      color: '#fff',
+    },
   },
   TitleBar: {
     css: {
       background: '#3a3a3a',
       borderRadius: '1.2em 1.2em 0 0',
-      padding: '.5em'
-    }
+      padding: '.5em',
+    },
   },
   FixedWrapperMaximized: {
     css: {
       borderRadius: '1.2em',
       overflow: 'hidden',
-      height: '660px'
-    }
+      height: '660px',
+    },
   },
   Message: {
-    secondaryTextColor: '#fff'
+    secondaryTextColor: '#fff',
   },
   TextComposer: {
     css: {
-      background: '#eaeaea'
-    }
+      background: '#eaeaea',
+    },
   },
   TextInput: {
     css: {
-      background: '#eaeaea'
-    }
-  }
+      background: '#eaeaea',
+    },
+  },
 }
 
 var purpleTheme = {
   vars: {
     'primary-color': '#6D5BBA',
     'secondary-color': '#3a3a3a',
-    'tertiary-color': 'rgba(0, 0, 0, 0.8)'
+    'tertiary-color': 'rgba(0, 0, 0, 0.8)',
   },
   Avatar: {
     size: '20px',
     css: {
-      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)'
-    }
+      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)',
+    },
   },
   AgentBar: {
     css: {
@@ -3234,15 +3248,15 @@ var purpleTheme = {
       background: 'linear-gradient(to right, #6D5BBA, #8D58BF)',
       borderRadius: '.5em',
       marginBottom: '.7em',
-      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)'
-    }
+      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)',
+    },
   },
   TitleBar: {
     css: {
       background: 'transparent',
       borderRadius: '.5em',
       marginBottom: '.5em',
-      padding: '0'
+      padding: '0',
     },
     IconButton: {
       css: {
@@ -3250,24 +3264,24 @@ var purpleTheme = {
         borderRadius: '8px',
         padding: '1em',
         margin: '.3em',
-        boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)'
-      }
-    }
+        boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)',
+      },
+    },
   },
   MessageList: {
     css: {
       background: 'linear-gradient(to right, #6D5BBA, #8D58BF)',
       marginBottom: '.7em',
       borderRadius: '.5em',
-      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)'
-    }
+      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)',
+    },
   },
   TextComposer: {
     css: {
       borderRadius: '.5em',
       marginBottom: '.7em',
-      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)'
-    }
+      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)',
+    },
   },
   Message: {
     secondaryTextColor: '#fff',
@@ -3275,10 +3289,10 @@ var purpleTheme = {
       Bubble: {
         css: {
           color: '#fff',
-          background: '#AA8BD2'
-        }
-      }
-    }
+          background: '#AA8BD2',
+        },
+      },
+    },
   },
   Bubble: {
     ovalBorderRadius: '.4em',
@@ -3286,62 +3300,62 @@ var purpleTheme = {
     css: {
       color: '#5A6976',
       background: '#fff',
-      fontSize: '14px'
-    }
+      fontSize: '14px',
+    },
   },
   FixedWrapperMaximized: {
     css: {
-      width: '280px'
-    }
-  }
+      width: '280px',
+    },
+  },
 }
 
 var elegantTheme = {
   vars: {
-    'primary-color': '#5A6976'
+    'primary-color': '#5A6976',
   },
   Avatar: {
     size: '20px',
     css: {
-      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)'
-    }
+      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)',
+    },
   },
   FixedWrapperMaximized: {
     css: {
       width: '310px',
       borderRadius: 0,
-      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)'
-    }
+      boxShadow: '0 .1em 1em rgba(0, 0, 0, 0.3)',
+    },
   },
   AgentBar: {
     css: {
       color: '#000',
-      background: '#fff'
+      background: '#fff',
     },
     Avatar: {
       css: {
-        boxShadow: 'none'
-      }
-    }
+        boxShadow: 'none',
+      },
+    },
   },
   TitleBar: {
     css: {
       color: '#000',
-      background: '#fff'
+      background: '#fff',
     },
     Icon: {
-      color: '#D9A646'
-    }
+      color: '#D9A646',
+    },
   },
   MessageList: {
     css: {
-      background: 'rgba(0, 0, 0, 0.8)'
-    }
+      background: 'rgba(0, 0, 0, 0.8)',
+    },
   },
   Bubble: {
     sharpBorderRadius: '.4em',
-    ovalBorderRadius: '.4em'
-  }
+    ovalBorderRadius: '.4em',
+  },
 }
 
 var LIGHT_BLUE = '#427fe1'
@@ -3350,21 +3364,21 @@ var defaultTheme = {
   vars: {
     'primary-color': LIGHT_BLUE,
     'secondary-color': '#fbfbfb',
-    'tertiary-color': WHITE
+    'tertiary-color': WHITE,
   },
   AgentBar: {
     Avatar: {
       size: '42px',
       css: {
-        marginRight: '.6em'
-      }
+        marginRight: '.6em',
+      },
     },
     css: {
-      backgroundColor: 'var(--secondary-color)'
-    }
+      backgroundColor: 'var(--secondary-color)',
+    },
   },
   Avatar: {
-    size: '30px'
+    size: '30px',
   },
   Bubble: {
     sharpBorderRadius: '0.3em',
@@ -3372,29 +3386,29 @@ var defaultTheme = {
     css: {
       backgroundColor: {
         default: 'var(--secondary-color)',
-        bot: 'green'
-      }
-    }
+        bot: 'green',
+      },
+    },
   },
   Button: {},
   ChatListItem: {
     Avatar: {
       css: {
-        marginRight: '.5em'
-      }
-    }
+        marginRight: '.5em',
+      },
+    },
   },
   FixedWrapperMaximized: {
     animationDuration: 100,
     width: '400px',
-    height: '500px'
+    height: '500px',
   },
   FixedWrapperMinimized: {
-    animationDuration: 100
+    animationDuration: 100,
   },
   FixedWrapperRoot: {
     position: 'right',
-    css: {}
+    css: {},
   },
   Message: {
     secondaryTextColor: '#000',
@@ -3404,39 +3418,39 @@ var defaultTheme = {
       Bubble: {
         css: {
           backgroundColor: 'var(--primary-color)',
-          color: WHITE
-        }
+          color: WHITE,
+        },
       },
       Content: {
         css: {
-          alignItems: 'flex-end'
-        }
+          alignItems: 'flex-end',
+        },
       },
       MessageMeta: {
         css: {
-          textAlign: 'right'
-        }
+          textAlign: 'right',
+        },
       },
       Time: {
         css: {
-          textAlign: 'right'
-        }
-      }
+          textAlign: 'right',
+        },
+      },
     },
     bot: {
       Bubble: {
         css: {
-          backgroundColor: 'green'
-        }
-      }
-    }
+          backgroundColor: 'green',
+        },
+      },
+    },
   },
   MessageButtons: {},
   MessageGroup: {},
   MessageList: {
     css: {
-      backgroundColor: 'var(--tertiary-color)'
-    }
+      backgroundColor: 'var(--tertiary-color)',
+    },
   },
   MessageMedia: {},
   MessageText: {},
@@ -3445,30 +3459,30 @@ var defaultTheme = {
     css: {
       borderColor: 'var(--primary-color)',
       backgroundColor: '#fff',
-      color: 'var(--primary-color)'
-    }
+      color: 'var(--primary-color)',
+    },
   },
   TextComposer: {
     // TODO: this is a color for text, but sounds like a color for background
     inputColor: '#000',
     Icon: {
-      color: '#aaa'
+      color: '#aaa',
     },
     IconButton: {
       active: {
         Icon: {
-          color: 'var(--primary-color)'
-        }
-      }
-    }
+          color: 'var(--primary-color)',
+        },
+      },
+    },
   },
   TitleBar: {
     iconsColor: '#fff',
     behaviour: 'default',
     css: {
-      backgroundColor: 'var(--primary-color)'
-    }
-  }
+      backgroundColor: 'var(--primary-color)',
+    },
+  },
 }
 
 var parseTheme = function parseTheme(theme) {
@@ -3478,7 +3492,7 @@ var parseTheme = function parseTheme(theme) {
     return _extends({}, theme, {
       vars: mapKeys(function (key) {
         return '--' + key
-      }, theme.vars || {})
+      }, theme.vars || {}),
     })
   }
 
@@ -3488,13 +3502,13 @@ var parseTheme = function parseTheme(theme) {
     {},
     mapValues(function (component) {
       return _extends({}, parseTheme(component), {
-        css: component.css || {}
+        css: component.css || {},
       })
     }, componentKeys),
     {
       vars: mapKeys(function (key) {
         return '--' + key
-      }, theme.vars || {})
+      }, theme.vars || {}),
     }
   )
 }
@@ -3507,7 +3521,7 @@ var TopLevelThemeProvider = function TopLevelThemeProvider(_ref) {
   return createElement(
     ThemeProvider,
     {
-      value: parsed
+      value: parsed,
     },
     children
   )
@@ -3519,7 +3533,7 @@ var StyledReply =
   /*#__PURE__*/
   styled$1('button', {
     displayName: 'QuickReply',
-    target: 'e1gt5po80'
+    target: 'e1gt5po80',
   })(
     'border-width:1px;border-style:solid;font-size:1em;line-height:1em;appearance:none;transition:box-shadow 0.1s,color 0.1s,border-color 0.2s;margin:0.25em;background-color:#fff;border-radius:1.4em;box-shadow:0 0.1em 0.1em 0 rgba(32,34,40,0.05);font-weight:400;overflow:hidden;padding:0.375em 1em 0.5em;word-break:break-word;&:hover{cursor:pointer;}&:active,&:focus{box-shadow:none;outline:none;background-color:rgba(0,0,0,0.05);}'
   )
@@ -3562,7 +3576,7 @@ var QuickReply =
       return createElement(
         StyledReply,
         _extends({}, this.props, {
-          onClick: this._handleClick
+          onClick: this._handleClick,
         })
       )
     }
@@ -3572,13 +3586,13 @@ var QuickReply =
 
 QuickReply.defaultProps = {
   onClick: noop,
-  onSelect: noop
+  onSelect: noop,
 }
 QuickReply.propTypes = {
   children: node.isRequired,
   onClick: func,
   onSelect: func,
-  value: oneOfType([string, number])
+  value: oneOfType([string, number]),
 }
 
 // eslint-disable-next-line no-console
@@ -3588,7 +3602,7 @@ var StyledReplies =
   /*#__PURE__*/
   styled$1('div', {
     displayName: 'QuickReplies',
-    target: 'e1dnb9qc0'
+    target: 'e1dnb9qc0',
   })(
     'display:flex;flex-wrap:wrap;text-align:center;justify-content:center;width:100%;'
   )
@@ -3633,7 +3647,7 @@ var QuickReplies =
         props = _objectWithoutPropertiesLoose(_this$props, [
           'children',
           'replies',
-          'onSelect'
+          'onSelect',
         ])
 
       if (process.env.NODE_ENV !== 'production' && children && replies) {
@@ -3641,7 +3655,7 @@ var QuickReplies =
         warnOnce$1(
           [
             'You should not use replies & children props together.',
-            'They cannot be rendered at once - children prop has higher rendering priority.'
+            'They cannot be rendered at once - children prop has higher rendering priority.',
           ].join('\n')
         )
       }
@@ -3649,21 +3663,21 @@ var QuickReplies =
       var childs = children
         ? compactChildren(children)
         : replies.map(function (reply, index) {
-          return createElement(
-            QuickReply,
-            {
-              key: index,
-              value: reply
-            },
-            reply
-          )
-        })
+            return createElement(
+              QuickReply,
+              {
+                key: index,
+                value: reply,
+              },
+              reply
+            )
+          })
       return createElement(
         StyledReplies,
         props,
         Children.map(childs, function (child) {
           return cloneElement(child, {
-            onSelect: _this2._handleSelect
+            onSelect: _this2._handleSelect,
           })
         })
       )
@@ -3673,12 +3687,12 @@ var QuickReplies =
   })(Component)
 
 QuickReplies.defaultProps = {
-  onSelect: noop
+  onSelect: noop,
 }
 QuickReplies.propTypes = {
   children: node,
   onSelect: func,
-  replies: arrayOf(string)
+  replies: arrayOf(string),
 }
 
 var StyledBar$1 =
@@ -3686,7 +3700,7 @@ var StyledBar$1 =
   styled$1('div', {
     displayName: 'TitleBar',
     section: true,
-    target: 'e1ohfhv0'
+    target: 'e1ohfhv0',
   })(
     'display:flex;justify-content:center;align-items:center;width:100%;border:#000;color:#fff;position:relative;z-index:2;text-align:center;padding:0.4em;'
   )
@@ -3694,7 +3708,7 @@ var Title$1 =
   /*#__PURE__*/
   styled$1('div', {
     displayName: 'TitleBarTitle',
-    target: 'e1ohfhv1'
+    target: 'e1ohfhv1',
   })(
     'width:100%;margin:0;margin-bottom:4px;padding:0 2px;text-align:center;font-size:0.9em;flex-grow:1;'
   )
@@ -3706,7 +3720,7 @@ var TitleBar = function TitleBar(_ref) {
     props = _objectWithoutPropertiesLoose(_ref, [
       'leftIcons',
       'rightIcons',
-      'title'
+      'title',
     ])
 
   return createElement(
@@ -3716,7 +3730,7 @@ var TitleBar = function TitleBar(_ref) {
     createElement(
       Title$1,
       {
-        ellipsis: true
+        ellipsis: true,
       },
       title
     ),
@@ -3728,7 +3742,7 @@ TitleBar.propTypes = {
   leftIcons: arrayOf(node),
   rightIcons: arrayOf(node),
   theme: shape(),
-  title: node
+  title: node,
 }
 
 var _React$createContext$1 = createContext(),
@@ -3739,7 +3753,7 @@ var StyledComposer =
   styled$1('div', {
     displayName: 'TextComposer',
     section: true,
-    target: 'eyij3xx0'
+    target: 'eyij3xx0',
   })('padding:0.5em;background:#fff;border-top:1px solid rgba(0,0,0,0.1);')
 
 var TextComposer =
@@ -3763,8 +3777,8 @@ var TextComposer =
         this
       _this.state = {
         value: _this._getValue({
-          value: _this.props.defaultValue
-        })
+          value: _this.props.defaultValue,
+        }),
       }
 
       _this._handleButtonClick = function (event) {
@@ -3782,7 +3796,7 @@ var TextComposer =
 
         if (!_this._isControlled()) {
           _this.setState({
-            value: value
+            value: value,
           })
         }
 
@@ -3821,7 +3835,7 @@ var TextComposer =
 
         if (!_this._isControlled()) {
           _this.setState({
-            value: ''
+            value: '',
           })
         }
 
@@ -3891,7 +3905,7 @@ var TextComposer =
           'onKeyDown',
           'onSend',
           'onValueChange',
-          'value'
+          'value',
         ])
 
       var contextValue = {
@@ -3901,12 +3915,12 @@ var TextComposer =
         maybeSend: this.maybeSend,
         onButtonClick: this._handleButtonClick,
         onChange: this._handleChange,
-        onKeyDown: this._handleKeyDown
+        onKeyDown: this._handleKeyDown,
       }
       return createElement(
         ComposerProvider,
         {
-          value: contextValue
+          value: contextValue,
         },
         createElement(StyledComposer, props, children)
       )
@@ -3924,7 +3938,7 @@ TextComposer.propTypes = {
   onChange: func,
   onKeyDown: func,
   onSend: func,
-  value: string
+  value: string,
 }
 TextComposer.defaultProps = {
   active: true,
@@ -3934,7 +3948,7 @@ TextComposer.defaultProps = {
   onChange: noop,
   onKeyDown: noop,
   onSend: noop,
-  onValueChange: noop
+  onValueChange: noop,
 }
 
 var withComposer = function (mapComposerToProps) {
@@ -3974,9 +3988,9 @@ var withComposer = function (mapComposerToProps) {
 
           return WithComposer
         })(Component)),
-        (_class.displayName =
-          'withComposer(' + getDisplayName(WrappedComponent) + ')'),
-        _temp
+      (_class.displayName =
+        'withComposer(' + getDisplayName(WrappedComponent) + ')'),
+      _temp
     )
   }
 }
@@ -4009,7 +4023,7 @@ var SendButton =
 
 SendButton.propTypes = {
   active: bool,
-  onClick: func
+  onClick: func,
 }
 var warnOnce$2 = once(console.warn.bind(console))
 var SendButton$1 = withComposer(function (_ref, ownProps) {
@@ -4025,8 +4039,8 @@ var SendButton$1 = withComposer(function (_ref, ownProps) {
         [
           sendButtonProps + ' props are controlled by TextComposer,',
           'if you want to use those please pass them to the TextComposer instead of ' +
-          getDisplayName(SendButton) +
-          '.'
+            getDisplayName(SendButton) +
+            '.',
         ].join(' ')
       )
     }
@@ -4034,12 +4048,12 @@ var SendButton$1 = withComposer(function (_ref, ownProps) {
 
   return active
     ? {
-      active: active,
-      onClick: onButtonClick
-    }
+        active: active,
+        onClick: onButtonClick,
+      }
     : {
-      active: active
-    }
+        active: active,
+      }
 })(SendButton)
 
 // TODO: we should have our own styled factory and this omit should be applied for each "global" custom prop
@@ -4056,7 +4070,7 @@ var StyledInput =
     },
     {
       displayName: 'TextInput',
-      target: 'e1m92qam0'
+      target: 'e1m92qam0',
     }
   )(
     'apperance:none;border:0;resize:none;background-color:#fff;height:1.5em;line-height:1.5em;min-width 0;width:100%;font-size:1em;&:focus,&:active{outline:none;}'
@@ -4100,13 +4114,13 @@ var TextInput =
         inputRef = _this$props.inputRef,
         props = _objectWithoutPropertiesLoose(_this$props, [
           'innerRef',
-          'inputRef'
+          'inputRef',
         ])
 
       return createElement(
         StyledInput,
         _extends({}, props, {
-          inputRef: this._getRef
+          inputRef: this._getRef,
         })
       )
     }
@@ -4120,7 +4134,7 @@ TextInput.defaultProps = {
   maxRows: 3,
   onChange: noop,
   onKeyDown: noop,
-  placeholder: 'Write a message...'
+  placeholder: 'Write a message...',
 }
 TextInput.propTypes = {
   defaultValue: string,
@@ -4132,7 +4146,7 @@ TextInput.propTypes = {
   onHeightChange: func,
   onKeyDown: func,
   placeholder: string,
-  value: string
+  value: string,
 }
 var warnOnce$3 = once(console.warn.bind(console))
 var TextInput$1 = withComposer(function (_ref2, ownProps) {
@@ -4147,7 +4161,7 @@ var TextInput$1 = withComposer(function (_ref2, ownProps) {
       'inputRef',
       'onChange',
       'onKeyDown',
-      'value'
+      'value',
     ]
 
     if (hasControlledProps(textInputProps, ownProps)) {
@@ -4156,8 +4170,8 @@ var TextInput$1 = withComposer(function (_ref2, ownProps) {
         [
           textInputProps + ' props are controlled by TextComposer,',
           'if you want to use those please pass them to the TextComposer instead of ' +
-          getDisplayName(TextInput) +
-          '.'
+            getDisplayName(TextInput) +
+            '.',
         ].join(' ')
       )
     }
@@ -4167,7 +4181,7 @@ var TextInput$1 = withComposer(function (_ref2, ownProps) {
     inputRef: inputRef,
     onChange: onChange,
     onKeyDown: onKeyDown,
-    value: value
+    value: value,
   }
 })(TextInput)
 
@@ -4208,7 +4222,7 @@ var StyledWrapper =
   styled$1('div', {
     displayName: 'FixedWrapperMaximized',
     mapPropsToStyles: mapPropsToStyles$b,
-    target: 'ep7mz240'
+    target: 'ep7mz240',
   })(
     'display:flex;flex-direction:column;max-height:100vh;position:absolute;bottom:0;@media (max-width:490px){width:100%;height:100%;position:fixed;}'
   )
@@ -4220,17 +4234,17 @@ var FixedWrapperMaximized = function FixedWrapperMaximized(props) {
       in: props.active,
       mountOnEnter: true,
       timeout: props.theme.FixedWrapperMaximized.animationDuration,
-      unmountOnExit: true
+      unmountOnExit: true,
     },
     function (state) {
       return createElement(
         StyledWrapper,
         _extends({}, props, {
-          state: state
+          state: state,
         }),
         Children.map(props.children, function (child) {
           return cloneElement(child, {
-            minimize: props.minimize
+            minimize: props.minimize,
           })
         })
       )
@@ -4249,7 +4263,7 @@ FixedWrapperMaximized.propTypes = {
   minimize: func,
 
   /** Override component's styles */
-  style: shape()
+  style: shape(),
 }
 var Maximized = withTheme(FixedWrapperMaximized)
 
@@ -4281,7 +4295,7 @@ var StyledWrapper$1 =
   styled$1('div', {
     displayName: 'FixedWrapperMinimized',
     mapPropsToStyles: mapPropsToStyles$c,
-    target: 'eq1nrcm0'
+    target: 'eq1nrcm0',
   })('width:60px;height:60px;position:absolute;bottom:1em;')
 
 var FixedWrapperMinimized = function FixedWrapperMinimized(props) {
@@ -4291,17 +4305,17 @@ var FixedWrapperMinimized = function FixedWrapperMinimized(props) {
       in: props.active,
       mountOnEnter: true,
       timeout: props.theme.FixedWrapperMinimized.animationDuration,
-      unmountOnExit: true
+      unmountOnExit: true,
     },
     function (state) {
       return createElement(
         StyledWrapper$1,
         _extends({}, props, {
-          state: state
+          state: state,
         }),
         Children.map(props.children, function (child) {
           return cloneElement(child, {
-            maximize: props.maximize
+            maximize: props.maximize,
           })
         })
       )
@@ -4320,7 +4334,7 @@ FixedWrapperMinimized.propTypes = {
   maximize: func,
 
   /** Override component's styles */
-  style: shape()
+  style: shape(),
 }
 var Minimized = withTheme(FixedWrapperMinimized)
 
@@ -4343,7 +4357,7 @@ var StyledWrapper$2 =
   styled$1('div', {
     displayName: 'FixedWrapperRoot',
     mapPropsToStyles: mapPropsToStyles$d,
-    target: 'e7t7c040'
+    target: 'e7t7c040',
   })('position:fixed;bottom:0;z-index:99;font-size:16px;')
 
 var FixedWrapperRoot = function FixedWrapperRoot(props) {
@@ -4353,7 +4367,7 @@ var FixedWrapperRoot = function FixedWrapperRoot(props) {
     createElement(
       Toggle,
       {
-        defaultOn: props.maximizedOnInit
+        defaultOn: props.maximizedOnInit,
       },
       function (_ref) {
         var on = _ref.on,
@@ -4366,14 +4380,14 @@ var FixedWrapperRoot = function FixedWrapperRoot(props) {
             if (child.type === Maximized) {
               return cloneElement(child, {
                 minimize: setOff,
-                active: on
+                active: on,
               })
             }
 
             if (child.type === Minimized) {
               return cloneElement(child, {
                 maximize: setOn,
-                active: !on
+                active: !on,
               })
             }
 
@@ -4386,7 +4400,7 @@ var FixedWrapperRoot = function FixedWrapperRoot(props) {
 }
 
 FixedWrapperRoot.defaultProps = {
-  maximizedOnInit: false
+  maximizedOnInit: false,
 }
 FixedWrapperRoot.propTypes = {
   /** Content of the component. FixedWrapper.Maximized and FixedWrapper.Minimized components will receive the proper state and methods */
@@ -4396,14 +4410,14 @@ FixedWrapperRoot.propTypes = {
   maximizedOnInit: bool,
 
   /** Override component's styles */
-  style: shape()
+  style: shape(),
 }
 
 var FixedWrapperImport = /*#__PURE__*/ Object.freeze({
   __proto__: null,
   Root: FixedWrapperRoot,
   Maximized: Maximized,
-  Minimized: Minimized
+  Minimized: Minimized,
 })
 
 var FixedWrapper = FixedWrapperImport
@@ -4460,7 +4474,7 @@ var ElementButtons =
               {
                 key: key,
                 label: text,
-                onClick: _this2.handleButtonClick(key)
+                onClick: _this2.handleButtonClick(key),
               },
               buttonProps
             )
@@ -4473,7 +4487,7 @@ var ElementButtons =
   })(Component)
 
 ElementButtons.defaultProps = {
-  onButtonClick: noop
+  onButtonClick: noop,
 }
 
 var stopPropagation = function stopPropagation(event) {
@@ -4486,7 +4500,7 @@ var Link = function Link(props) {
     _extends({}, props, {
       onClick: stopPropagation,
       rel: 'nofollow noopener',
-      target: '_blank'
+      target: '_blank',
     })
   )
 }
@@ -4494,17 +4508,17 @@ var Link = function Link(props) {
 var StyledImg =
   /*#__PURE__*/
   styled$1('img', {
-    target: 'e9ztsyy0'
+    target: 'e9ztsyy0',
   })('display:block;width:100%;height:150px;object-fit:cover;')
 var StyledImageContainer =
   /*#__PURE__*/
   styled$1('div', {
-    target: 'e9ztsyy1'
+    target: 'e9ztsyy1',
   })('width:100%;margin:0 auto;')
 
 var getThumbnailProps = function getThumbnailProps(url, srcset) {
   var props = {
-    src: url
+    src: url,
   }
 
   if (srcset !== undefined) {
@@ -4529,7 +4543,7 @@ var Image = function Image(_ref) {
         StyledImg,
         _extends(
           {
-            alt: ''
+            alt: '',
           },
           getThumbnailProps(url, srcset)
         )
@@ -4544,20 +4558,20 @@ var CardImage = function CardImage(_ref2) {
 
   return link
     ? createElement(
-      Link,
-      {
-        href: link,
-        style: props.style
-      },
-      Image(props)
-    )
+        Link,
+        {
+          href: link,
+          style: props.style,
+        },
+        Image(props)
+      )
     : Image(props)
 }
 
 CardImage.propTypes = {
   link: string,
   url: string.isRequired,
-  srcSet: string
+  srcSet: string,
 }
 
 var minWidth =
@@ -4581,28 +4595,28 @@ var Card =
         onButtonClick = _this$props.onButtonClick,
         restProps = _objectWithoutPropertiesLoose(_this$props, [
           'card',
-          'onButtonClick'
+          'onButtonClick',
         ])
 
       return createElement(
         StyledBubble,
         _extends(
           {
-            className: minWidth
+            className: minWidth,
           },
           restProps
         ),
         card.image && createElement(CardImage, card.image),
         (card.title || card.subtitle) &&
-        createElement(MessageTitle, {
-          subtitle: card.subtitle,
-          title: card.title
-        }),
+          createElement(MessageTitle, {
+            subtitle: card.subtitle,
+            title: card.title,
+          }),
         card.buttons &&
-        createElement(ElementButtons, {
-          buttons: card.buttons,
-          onButtonClick: onButtonClick
-        })
+          createElement(ElementButtons, {
+            buttons: card.buttons,
+            onButtonClick: onButtonClick,
+          })
       )
     }
 
@@ -4612,12 +4626,12 @@ var Card =
 var StyledCarouselContainer =
   /*#__PURE__*/
   styled$1('div', {
-    target: 'epptpc30'
+    target: 'epptpc30',
   })('position:relative;width:100%;display:flex;')
 var StyledCardsContainer =
   /*#__PURE__*/
   styled$1('div', {
-    target: 'epptpc31'
+    target: 'epptpc31',
   })(
     'display:flex;width:100%;overflow-x:',
     function (props) {
@@ -4628,12 +4642,12 @@ var StyledCardsContainer =
 var StyledCardContainer =
   /*#__PURE__*/
   styled$1('div', {
-    target: 'epptpc32'
+    target: 'epptpc32',
   })('flex-grow:0;flex-shrink:0;& + &{margin-left:0.5em;}')
 var ArrowButton =
   /*#__PURE__*/
   styled$1('button', {
-    target: 'epptpc33'
+    target: 'epptpc33',
   })(
     'position:absolute;width:30px;height:30px;border-radius:50%;background:#fff;border:0;box-shadow:0 4px 12px rgba(0,0,0,0.3);outline:none;text-align:center;top:32%;display:flex;align-items:center;justify-content:center;padding:0;&:hover{cursor:pointer;}svg{display:inline;}',
     function (_ref) {
@@ -4694,7 +4708,7 @@ var Carousel =
         ) || this
       _this.state = {
         showScrollLeft: false,
-        showScrollRight: false
+        showScrollRight: false,
       }
 
       _this.getCardContainerRef = function (ref) {
@@ -4707,7 +4721,7 @@ var Carousel =
 
         _this.setState({
           showScrollLeft: !isScrolledToLeft(cardContainerRef),
-          showScrollRight: !isScrolledToRight(cardContainerRef)
+          showScrollRight: !isScrolledToRight(cardContainerRef),
         })
       }
 
@@ -4775,7 +4789,7 @@ var Carousel =
       var estimateItemsWidth = calculateItemsWidth({
         count: estimatedVisibleCount,
         width: width,
-        spacing: spacing
+        spacing: spacing,
       })
       var visibleCount =
         estimateItemsWidth + width <= visibleWidth
@@ -4784,7 +4798,7 @@ var Carousel =
       var itemsWidth = calculateItemsWidth({
         count: visibleCount,
         width: width,
-        spacing: spacing
+        spacing: spacing,
       })
       var finalX = obscuredX + itemsWidth / 2 - visibleWidth / 2
       return finalX
@@ -4802,30 +4816,30 @@ var Carousel =
           {
             innerRef: this.getCardContainerRef,
             mobile: mobile,
-            onScroll: this.handleContainerScroll
+            onScroll: this.handleContainerScroll,
           },
           Children.map(children, function (child) {
             return createElement(StyledCardContainer, null, child)
           })
         ),
         this.state.showScrollLeft &&
-        createElement(
-          ArrowButton,
-          {
-            onClick: this.scrollToDirection(-1),
-            variant: 'left'
-          },
-          createElement(ArrowLeftIcon, null)
-        ),
+          createElement(
+            ArrowButton,
+            {
+              onClick: this.scrollToDirection(-1),
+              variant: 'left',
+            },
+            createElement(ArrowLeftIcon, null)
+          ),
         this.state.showScrollRight &&
-        createElement(
-          ArrowButton,
-          {
-            onClick: this.scrollToDirection(1),
-            variant: 'right'
-          },
-          createElement(ArrowRightIcon, null)
-        )
+          createElement(
+            ArrowButton,
+            {
+              onClick: this.scrollToDirection(1),
+              variant: 'right',
+            },
+            createElement(ArrowRightIcon, null)
+          )
       )
     }
 
@@ -4834,7 +4848,9 @@ var Carousel =
 
 Carousel.defaultProps = {
   mobile:
-    typeof window !== 'undefined' ? /mobile/gi.test(navigator.userAgent) : false
+    typeof window !== 'undefined'
+      ? /mobile/gi.test(navigator.userAgent)
+      : false,
 }
 
 export {
@@ -4905,5 +4921,5 @@ export {
   injectGlobal,
   keyframes,
   purpleTheme,
-  styled$1 as styled
+  styled$1 as styled,
 }
