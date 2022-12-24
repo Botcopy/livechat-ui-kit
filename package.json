@@ -1,10 +1,8 @@
 {
-  "name": "@livechat/ui-kit",
+  "name": "@maxletou/livechat-ui-kit",
   "version": "0.4.2",
   "description": "Chat UI Kit",
   "contributors": [
-    "Konrad Kruk <k.kruk@livechatinc.com>",
-    "Mateusz Burzyński <m.burzynski@livechatinc.com>",
     "Philipp Holly <office@pholly.at>"
   ],
   "license": "MIT",
